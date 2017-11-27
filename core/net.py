@@ -1,5 +1,6 @@
 from networkx import networkx as nx
 from basic_object import BasicObject
+import math
 class Net(nx.Graph):
     def __init__(self):
         nx.Graph.__init__(self)
@@ -42,7 +43,6 @@ class Net(nx.Graph):
             return True
         return False
 
-
     def _set_link_attribute(self, u, v, **attr):
         self.add_edge(u, v, **attr)
     def _get_link_attribute(self, u, v, attr):
@@ -52,15 +52,14 @@ class Net(nx.Graph):
     def get_link_bandwidth_used(self, u, v):
         return self._get_link_attribute(u, v, 'bandwidth_used')
     def get_link_bandwidth_free(self, u, v):
-        return self._get_link_attribute(u,v, 'bandwidth_free')
-    def reset_bandwidth_capacity(self,u,v, bw_c):
+        return self._get_link_attribute(u, v, 'bandwidth_free')
+    def reset_bandwidth_capacity(self,u, v, bw_c):
         self.set_link_bandwidth_capacity(u, v, bw_c)
         self.set_link_bandwidth_used(u, v, 0)
         self.set_link_bandwidth_free(u, v, bw_c)
         return bw_c
     def init_bandwidth_capacity(self, u, v, bw_c):
         return self.reset_bandwidth_capacity(u, v, bw_c)
-
     def set_link_bandwidth_capacity(self, u, v, bw_c):
         self._set_link_attribute(u, v, bandwidth_capacity=bw_c)
         return bw_c
@@ -82,17 +81,93 @@ class Net(nx.Graph):
             return True
         return False
 
+    def allocate_bandwidth_resource_path(self, path, bw_amount):
+        length = len(path)
+        for i in range(0, length-1):
+            print i
+            self.allocate_bandwidth_resource(path[i], path[i+1], bw_amount)
+
+
+    def get_link_latency(self, u, v):
+        return self._get_link_attribute(u, v, 'latency')
+    def set_link_latency(self, u, v, bw_l):
+        self._set_link_attribute(u, v, latency=bw_l)
+    def init_link_latency(self, u, v, bw_l):
+        self.set_link_latency(u, v, bw_l)
+
+    def get_neighbours(self, node_id):
+        return self.neighbors(node_id)
+
+    def all_shortest_paths(self):
+        r = nx.all_pairs_dijkstra(self, weight='latency')
+        print [n for n in r]
+    def get_shortest_paths(self, src, dst, weight):
+        try:
+            return nx.shortest_path(self, src, dst, weight=weight)
+        except:
+            return None
+    def get_minimum_latency_path(self, src, dst):
+        return self.get_shortest_paths(src, dst, 'latency')
+    def get_minimum_free_bandwidth(self, path):
+        length = len(path)
+        minimum_free_bandwidth = float('inf')
+        for i in range(0, length-1):
+            print i
+            free_bandwidth = self.get_link_bandwidth_free(path[i], path[i+1])
+            if free_bandwidth < minimum_free_bandwidth:
+                minimum_free_bandwidth = free_bandwidth
+        return minimum_free_bandwidth
+    def get_single_source_minimum_latency_path(self, src):
+        return nx.single_source_dijkstra(self, source=src, cutoff=None, weight='latency')
+
+
 
 
 if __name__ == '__main__':
-    g = Net()
-    g.add_node(1)
-    g.add_node(2)
-    g.set_link_bandwidth_capacity(1, 2, 100)
-    print g.get_link_bandwidth_capacity(1, 2)
-    print g.edges[2, 1]['bandwidth_capacity']
-    print g[2][1]['bandwidth_capacity']
-    print g[1][2]['bandwidth_capacity']
-    print g.nodes().data()
-    print g.edges().data()
+    substrate_network = Net()
+    substrate_network.init_bandwidth_capacity(1, 6, 100)
+    substrate_network.init_bandwidth_capacity(1, 2, 100)
+    substrate_network.init_bandwidth_capacity(2, 3, 100)
+    substrate_network.init_bandwidth_capacity(3, 4, 100)
+    substrate_network.init_bandwidth_capacity(4, 5, 100)
+    substrate_network.init_bandwidth_capacity(5, 6, 100)
+    substrate_network.init_bandwidth_capacity(2, 6, 100)
+    substrate_network.init_bandwidth_capacity(2, 5, 100)
+    substrate_network.init_bandwidth_capacity(3, 5, 100)
+
+    substrate_network.init_link_latency(1, 6, 2)
+    substrate_network.init_link_latency(1, 2, 2)
+    substrate_network.init_link_latency(2, 3, 2)
+    substrate_network.init_link_latency(3, 4, 2)
+    substrate_network.init_link_latency(4, 5, 2)
+    substrate_network.init_link_latency(5, 6, 2)
+    substrate_network.init_link_latency(2, 6, 2)
+    substrate_network.init_link_latency(2, 5, 2)
+    substrate_network.init_link_latency(3, 5, 2)
+
+    substrate_network.init_node_cpu_capacity(1, 100)
+    substrate_network.init_node_cpu_capacity(2, 100)
+    substrate_network.init_node_cpu_capacity(3, 100)
+    substrate_network.init_node_cpu_capacity(4, 100)
+    substrate_network.init_node_cpu_capacity(5, 100)
+    substrate_network.init_node_cpu_capacity(6, 100)
+
+    print substrate_network.nodes().data()
+    print substrate_network.edges().data()
+    print substrate_network.get_link_latency(1, 2)
+    print substrate_network.get_link_bandwidth_free(1, 2)
+    print [n for n in substrate_network.get_neighbours(6)]
+    # print substrate_network.all_shortest_paths()
+    print "shortestpath"
+    print substrate_network.get_shortest_paths(1,7,weight='latency')
+    path = substrate_network.get_minimum_latency_path(1, 5)
+    print path
+    print substrate_network.get_minimum_free_bandwidth(path)
+    print "single source"
+    print substrate_network.get_single_source_minimum_latency_path(2)
+    print substrate_network.edges().data()
+    substrate_network.allocate_bandwidth_resource_path(path, 10)
+    print substrate_network.edges().data()
+    print "Finished"
+
 
