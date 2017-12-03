@@ -1,7 +1,7 @@
 import copy
 
 
-class ALG1():
+class ALG2():
     def __init__(self):
         self.substrate_network = None
         self.sfc = None
@@ -57,6 +57,7 @@ class ALG1():
                 self.node_info[node][vnf_id]['src_path'] = []
                 self.node_info[node][vnf_id]['tmp_substrate_network'] = None
                 self.node_info[node][vnf_id]['previous_substrate_node'] = None
+                self.node_info[node][vnf_id]['previous_substrate_nodes'] = []
 
             self.node_info[node][src_vnf.id] = {}
             self.node_info[node][src_vnf.id]['flag'] = False  # This means that src can be placed on the src node
@@ -67,12 +68,14 @@ class ALG1():
         self.node_info[src_substrate_node][src_vnf.id]['latency'] = 0
         self.node_info[src_substrate_node][src_vnf.id]['src_path'] = [src_substrate_node]
         self.node_info[src_substrate_node][src_vnf.id]['path'] = []
+        self.node_info[src_substrate_node][src_vnf.id]['previous_substrate_nodes'] = []
 
         self.node_info[dst_substrate_node][dst_vnf.id]['flag'] = False
         self.node_info[dst_substrate_node][dst_vnf.id]['latency'] = float('inf')
         self.node_info[dst_substrate_node][dst_vnf.id]['src_path'] = []
         self.node_info[dst_substrate_node][dst_vnf.id]['path'] = []
         self.node_info[dst_substrate_node][dst_vnf.id]['tmp_substrate_network'] = None
+        self.node_info[dst_substrate_node][dst_vnf.id]['previous_substrate_nodes'] = []
 
         return self.sfc
 
@@ -130,6 +133,7 @@ class ALG1():
 
         while current_nfv.id != src_vnf.id:
             previous_nfv = self.sfc.get_previous_vnf(current_nfv)
+            current_substrate_node = self.sfc.get_substrate_node(current_nfv)
             previous_substrate_node = self.node_info[current_substrate_node][current_nfv.id]['previous_substrate_node']
             previous_nfv.assign_substrate_node(previous_substrate_node)
             current_nfv = previous_nfv
@@ -192,8 +196,13 @@ class ALG1():
                        ::-1]  # reverse the path, since the original path is starting from this substrate network to the one hosting previous vnf.
                 for n in path[1:]:  # Do not count the node hosting previous vnf twice.
                     tmp_path.append(n)
-                self.node_info[substrate_node][current_vnf.id]['src_path'] = tmp_path
+                self.node_info[substrate_node][current_vnf.id]['src_path'] = tmp_path[:]
                 self.node_info[substrate_node][current_vnf.id]['previous_substrate_node'] = node
+
+                self.node_info[substrate_node][current_vnf.id]['previous_substrate_nodes'] = \
+                self.node_info[node][previous_vnf.id]['previous_substrate_nodes'][:]
+                self.node_info[substrate_node][current_vnf.id]['previous_substrate_nodes'].append(node)
+
             all_failed = False
 
         if minimum_latency_path:
@@ -201,6 +210,8 @@ class ALG1():
                 substrate_node, cpu_request)
             self.node_info[substrate_node][current_vnf.id]['tmp_substrate_network'].allocate_bandwidth_resource_path(
                 minimum_latency_path, bandwidth_request)
+            # self.node_info[substrate_node][current_vnf.id]['previous_substrate_nodes'] = self.node_info[node][previous_vnf.id]['previous_substrate_nodes'][:]
+            # self.node_info[substrate_node][current_vnf.id]['previous_substrate_nodes'].append(node)
 
         return all_failed
 
@@ -209,5 +220,7 @@ class ALG1():
 
     def make_a_copy_of_network(self, network):
         return copy.deepcopy(network)
+
+
 
 
