@@ -26,8 +26,8 @@ class SFC():
     def set_dst_substrate_node(self, substrate_node):
         """set substrate node for dst
 
-                This method assign a substrate node for hosting src in sfc.
-                """
+        This method assign a substrate node for hosting src in sfc.
+        """
         # todo(xu): we need consider whether this method should in sfc class
         self.dst.assign_substrate_node(substrate_node)
 

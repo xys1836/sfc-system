@@ -62,12 +62,7 @@ from algorithms.alg1 import ALG1
 alg1 = ALG1()
 alg1.install_substrate_network(substrate_network)
 alg1.install_SFC(sfc)
-alg1.algorithm()
-# alg1.algorithm(sfc.get_src_vnf())
-# alg1.iterate_substrate_node(1, vnf2)
-# try:
-#     alg1.algorithm(sfc.get_src_vnf())
-#     alg1.iterate_substrate_node(1)
-# except:
-#     print "exception"
-
+alg1.start_algorithm()
+new_sfc = alg1.get_new_sfc()
+new_substrate_network = alg1.get_new_substrate_network()
+print ""
