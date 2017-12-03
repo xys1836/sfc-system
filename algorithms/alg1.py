@@ -129,6 +129,7 @@ class ALG1():
 
         while current_nfv.id != src_vnf.id:
             previous_nfv = self.sfc.get_previous_vnf(current_nfv)
+            current_substrate_node = self.sfc.get_substrate_node(current_nfv)
             previous_substrate_node = self.node_info[current_substrate_node][current_nfv.id]['previous_substrate_node']
             previous_nfv.assign_substrate_node(previous_substrate_node)
             current_nfv = previous_nfv
