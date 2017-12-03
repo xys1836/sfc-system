@@ -57,7 +57,9 @@ class ALG2():
                 self.node_info[node][vnf_id]['src_path'] = []
                 self.node_info[node][vnf_id]['tmp_substrate_network'] = None
                 self.node_info[node][vnf_id]['previous_substrate_node'] = None
-                self.node_info[node][vnf_id]['previous_substrate_nodes'] = []
+                self.node_info[node][vnf_id]['current_substrate_nodes'] = []    # The meta information
+                                                                                # in which is a set of substrate node
+                                                                                # has been assigned to VNFs in order
 
             self.node_info[node][src_vnf.id] = {}
             self.node_info[node][src_vnf.id]['flag'] = False  # This means that src can be placed on the src node
@@ -68,14 +70,14 @@ class ALG2():
         self.node_info[src_substrate_node][src_vnf.id]['latency'] = 0
         self.node_info[src_substrate_node][src_vnf.id]['src_path'] = [src_substrate_node]
         self.node_info[src_substrate_node][src_vnf.id]['path'] = []
-        self.node_info[src_substrate_node][src_vnf.id]['previous_substrate_nodes'] = []
+        self.node_info[src_substrate_node][src_vnf.id]['current_substrate_nodes'] = [1]
 
         self.node_info[dst_substrate_node][dst_vnf.id]['flag'] = False
         self.node_info[dst_substrate_node][dst_vnf.id]['latency'] = float('inf')
         self.node_info[dst_substrate_node][dst_vnf.id]['src_path'] = []
         self.node_info[dst_substrate_node][dst_vnf.id]['path'] = []
         self.node_info[dst_substrate_node][dst_vnf.id]['tmp_substrate_network'] = None
-        self.node_info[dst_substrate_node][dst_vnf.id]['previous_substrate_nodes'] = []
+        self.node_info[dst_substrate_node][dst_vnf.id]['current_substrate_nodes'] = []
 
         return self.sfc
 
@@ -147,8 +149,8 @@ class ALG2():
         print latency
         print paths
         # Here should be carefully considered
-        del latency[substrate_node]
-        del paths[substrate_node]
+        # del latency[substrate_node]
+        # del paths[substrate_node]
 
         previous_vnf = self.sfc.get_previous_vnf(current_vnf)
         all_failed = True
@@ -161,7 +163,11 @@ class ALG2():
 
         for node, path in paths.items():
             print node, path
+
             if not self.node_info[node][previous_vnf.id]['flag']:
+                continue
+            if substrate_node in self.node_info[node][previous_vnf.id]['current_substrate_nodes']:
+                # this node has been used before
                 continue
             tmp_substrate_network = self.node_info[node][previous_vnf.id]['tmp_substrate_network']
             if not tmp_substrate_network:
@@ -199,9 +205,9 @@ class ALG2():
                 self.node_info[substrate_node][current_vnf.id]['src_path'] = tmp_path[:]
                 self.node_info[substrate_node][current_vnf.id]['previous_substrate_node'] = node
 
-                self.node_info[substrate_node][current_vnf.id]['previous_substrate_nodes'] = \
-                self.node_info[node][previous_vnf.id]['previous_substrate_nodes'][:]
-                self.node_info[substrate_node][current_vnf.id]['previous_substrate_nodes'].append(node)
+                self.node_info[substrate_node][current_vnf.id]['current_substrate_nodes'] = \
+                self.node_info[node][previous_vnf.id]['current_substrate_nodes'][:]
+                self.node_info[substrate_node][current_vnf.id]['current_substrate_nodes'].append(substrate_node)
 
             all_failed = False
 
