@@ -4,15 +4,16 @@ from core.vnf import VNF
 
 # create a new substrate network
 substrate_network = Net()
-substrate_network.init_bandwidth_capacity(1, 6, 100)
+substrate_network.init_bandwidth_capacity(1, 6, 0)
 substrate_network.init_bandwidth_capacity(1, 2, 100)
-substrate_network.init_bandwidth_capacity(2, 3, 100)
+substrate_network.init_bandwidth_capacity(2, 3, 0)
 substrate_network.init_bandwidth_capacity(3, 4, 100)
-substrate_network.init_bandwidth_capacity(4, 5, 100)
-substrate_network.init_bandwidth_capacity(5, 6, 100)
-substrate_network.init_bandwidth_capacity(2, 6, 100)
+substrate_network.init_bandwidth_capacity(4, 5, 0)
+substrate_network.init_bandwidth_capacity(5, 6, 0)
+substrate_network.init_bandwidth_capacity(2, 6, 0)
 substrate_network.init_bandwidth_capacity(2, 5, 100)
 substrate_network.init_bandwidth_capacity(3, 5, 100)
+substrate_network.init_bandwidth_capacity(4, 7, 100)
 
 substrate_network.init_link_latency(1, 6, 2)
 substrate_network.init_link_latency(1, 2, 2)
@@ -23,6 +24,7 @@ substrate_network.init_link_latency(5, 6, 2)
 substrate_network.init_link_latency(2, 6, 2)
 substrate_network.init_link_latency(2, 5, 2)
 substrate_network.init_link_latency(3, 5, 2)
+substrate_network.init_link_latency(4, 7, 2)
 
 substrate_network.init_node_cpu_capacity(1, 100)
 substrate_network.init_node_cpu_capacity(2, 100)
@@ -30,6 +32,7 @@ substrate_network.init_node_cpu_capacity(3, 100)
 substrate_network.init_node_cpu_capacity(4, 100)
 substrate_network.init_node_cpu_capacity(5, 100)
 substrate_network.init_node_cpu_capacity(6, 100)
+substrate_network.init_node_cpu_capacity(7, 100)
 
 
 src_vnf = VNF('src')
@@ -56,13 +59,56 @@ sfc.connect_two_vnfs(vnf2, vnf3)
 sfc.connect_two_vnfs(vnf3, dst_vnf)
 sfc.set_latency_request(10)
 sfc.set_src_substrate_node(1)
-sfc.set_dst_substrate_node(4)
+sfc.set_dst_substrate_node(7)
 
 from algorithms.alg1 import ALG1
-alg1 = ALG1()
-alg1.install_substrate_network(substrate_network)
-alg1.install_SFC(sfc)
-alg1.start_algorithm()
-new_sfc = alg1.get_new_sfc()
-new_substrate_network = alg1.get_new_substrate_network()
-print ""
+from algorithms.alg2 import ALG2
+from algorithms.alg3 import ALG3
+alg = ALG3()
+alg.install_substrate_network(substrate_network)
+alg.install_SFC(sfc)
+alg.start_algorithm()
+sfc = alg.get_new_sfc()
+# substrate_network = alg.get_new_substrate_network()
+vnf_mapping = alg.get_vnf_mapping()
+routing_info = alg.get_routing_info()
+
+from core.monitor import Monitor
+monitor = Monitor(substrate_network)
+isStop = False
+
+
+while(not isStop):
+    cmd = raw_input(">")
+    if cmd == "quit" or cmd == "exit":
+        print "is stop"
+        isStop = True
+    if cmd == "node info":
+        monitor.get_node_information()
+    if cmd == "ls sfc":
+        print sfc
+    if cmd == "ls sfc vnf":
+        for vnfid, vnf in sfc.vnfs.items():
+            print vnfid, vnf
+    if cmd == "add link":
+        substrate_network.init_bandwidth_capacity(1, 7, 100)
+        substrate_network.init_node_cpu_capacity(7, 100)
+        substrate_network.init_link_latency(1, 7, 20)
+    if cmd == "check node":
+        print substrate_network.node[5]['vnf_list'][0].id
+        print substrate_network.nodes[5]['vnf_list'][0].get_cpu_request()
+    if cmd == 'set request':
+        vnf = sfc.get_vnf_by_id(3)
+        vnf.set_cpu_request(50)
+    if cmd == 'update':
+        substrate_network.update_nodes_state()
+    if cmd == "node info s":
+        substrate_network.print_out_node_information()
+
+
+def parseCmd(cmd):
+    cmd = cmd.split(' ')
+    if cmd[0] == "sb":
+        if cmd[1] == "set":
+            if cmd[2] == "node":
+                print cmd

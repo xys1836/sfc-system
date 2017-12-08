@@ -55,11 +55,14 @@ class SFC():
         return self.src
     def get_dst_vnf(self):
         return self.dst
+    def get_vnf_by_id(self, vnf_id):
+        return self.vnfs[vnf_id]
 
     def set_latency_request(self, latency_request):
         self.latency_request = latency_request
     def get_latency_request(self):
         return self.latency_request
+
 
 
 if __name__ == '__main__':
