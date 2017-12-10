@@ -33,10 +33,15 @@ node
 class Net(nx.Graph):
     def __init__(self):
         nx.Graph.__init__(self)
+        self.sfc_dict = {}
+        self.sfc_route_info = {} # sfc_id, route_info
 
 
 
-
+    def get_sfc_by_id(self, sfc_id):
+        return self.sfc_dict[sfc_id]
+    def set_sfc(self, sfc):
+        self.sfc_dict[sfc.id] = sfc
     def _get_node_attribute(self, node_id, attr):
         return self.nodes[node_id][attr]
     def _set_node_attribute(self, node_id, **attr):
@@ -46,7 +51,7 @@ class Net(nx.Graph):
         self.set_node_cpu_capacity(node_id, cpu_capacity)
         self.set_node_cpu_used(node_id, 0)
         self.set_node_cpu_free(node_id, cpu_capacity)
-        self.nodes[node_id]['vnf_list'] = []
+        self.nodes[node_id]['sfc_vnf_list'] = []
         return
     def init_node_cpu_capacity(self, node_id, cpu_capacity):
         self.reset_node_cpu_capacity(node_id, cpu_capacity)
@@ -64,8 +69,8 @@ class Net(nx.Graph):
         return self._get_node_attribute(node_id, "cpu_used")
     def get_node_cpu_free(self, node_id):
         return self._get_node_attribute(node_id, "cpu_free")
-    def get_node_vnf_list(self, node_id):
-        return self._get_node_attribute(node_id, "vnf_list")
+    def get_node_sfc_vnf_list(self, node_id):
+        return self._get_node_attribute(node_id, "sfc_vnf_list")
     def allocate_cpu_resource(self, node_id, cpu_amount):
         cpu_capacity = self.get_node_cpu_capacity(node_id)
         cpu_free = self.get_node_cpu_free(node_id)
@@ -76,7 +81,19 @@ class Net(nx.Graph):
             self.set_node_cpu_free(node_id, cpu_free-cpu_amount)
             self.set_node_cpu_used(node_id, cpu_used+cpu_amount)
             return True
-        return False
+
+    def deallocate_cpu_resource(self, node_id, cpu_amount):
+        cpu_capacity = self.get_node_cpu_capacity(node_id)
+        cpu_free = self.get_node_cpu_free(node_id)
+        cpu_used = self.get_node_cpu_used(node_id)
+        if cpu_amount > cpu_free:
+            return False
+        else:
+            self.set_node_cpu_free(node_id, cpu_free+cpu_amount)
+            self.set_node_cpu_used(node_id, cpu_used-cpu_amount)
+            return True
+
+
 
     def change_node_cpu_capacity(self, node_id):
         pass
@@ -100,6 +117,12 @@ class Net(nx.Graph):
         return bw_c
     def init_bandwidth_capacity(self, u, v, bw_c):
         return self.reset_bandwidth_capacity(u, v, bw_c)
+    def reset_bandwidth(self, u, v):
+        #reset used and free bandwidth by keep capacity not changed
+        capacity = self.get_link_bandwidth_capacity(u, v)
+        self.set_link_bandwidth_free(u, v, capacity)
+        self.set_link_bandwidth_used(u, v, 0)
+
     def set_link_bandwidth_capacity(self, u, v, bw_c):
         self._set_link_attribute(u, v, bandwidth_capacity=bw_c)
         return bw_c
@@ -119,14 +142,27 @@ class Net(nx.Graph):
             self.set_link_bandwidth_used(u, v, bw_u+bw_amount)
             self.set_link_bandwidth_free(u, v, bw_f-bw_amount)
             return True
-        return False
 
     def allocate_bandwidth_resource_path(self, path, bw_amount):
         length = len(path)
         for i in range(0, length-1):
-            print i
             self.allocate_bandwidth_resource(path[i], path[i+1], bw_amount)
 
+    def deallocate_bandwidth_resource(self, u, v, bw_amount):
+        bw_c = self.get_link_bandwidth_capacity(u, v)
+        bw_u = self.get_link_bandwidth_used(u, v)
+        bw_f = self.get_link_bandwidth_free(u, v)
+        if bw_amount > bw_f:
+            return False
+        else:
+            self.set_link_bandwidth_used(u, v, bw_u - bw_amount)
+            self.set_link_bandwidth_free(u, v, bw_f + bw_amount)
+            return True
+
+    def deallocate_bandwidth_resource_path(self, path, bw_amount):
+        length = len(path)
+        for i in range(0, length-1):
+            self.deallocate_bandwidth_resource(path[i], path[i+1], bw_amount)
 
     def get_link_latency(self, u, v):
         return self._get_link_attribute(u, v, 'latency')
@@ -152,7 +188,6 @@ class Net(nx.Graph):
         length = len(path)
         minimum_free_bandwidth = float('inf')
         for i in range(0, length-1):
-            print i
             free_bandwidth = self.get_link_bandwidth_free(path[i], path[i+1])
             if free_bandwidth < minimum_free_bandwidth:
                 minimum_free_bandwidth = free_bandwidth
@@ -160,36 +195,74 @@ class Net(nx.Graph):
     def get_single_source_minimum_latency_path(self, src):
         return nx.single_source_dijkstra(self, source=src, cutoff=None, weight='latency')
 
+
+
+    def deploy_sfc(self, sfc, route_info):
+        if sfc.id not in self.sfc_dict:
+            self.sfc_dict[sfc.id] = sfc
+        if sfc.id not in self.sfc_route_info:
+            self.sfc_route_info[sfc.id] = route_info
+        for vnf_id, path in route_info.items():
+            if vnf_id == 'dst':
+                self.nodes[sfc.dst.substrate_node]['sfc_vnf_list'].append((sfc.id, sfc.dst))
+                continue
+            vnf = sfc.get_vnf_by_id(vnf_id)
+            self.nodes[path[0]]['sfc_vnf_list'].append((sfc.id, vnf))
+
+
+
+
     def update_network_state(self):
         self.update_nodes_state()
+        self.update_bandwidth_state()
+
 
     def update_nodes_state(self):
-        # for node in self.nodes.items():
-        #     cpu_used = 0
-        #     for vnf in node[1]['vnf_list']:
-        #         cpu_used += vnf.get_cpu_request()
-        #     node[1]['cpu_used'] = cpu_used
-        #     node[1]['cpu_free'] = node[1]['cpu_capacity'] - node[1]['cpu_used']
         for node in self.nodes():
             cpu_used = 0
-            for vnf in self.get_node_vnf_list(node):
-                cpu_used += vnf.get_cpu_request()
+            for sfc_vnf in self.get_node_sfc_vnf_list(node):
+                cpu_used += sfc_vnf[1].get_cpu_request()
             self.set_node_cpu_used(node, cpu_used)
             cpu_free = self.get_node_cpu_capacity(node) - cpu_used
             self.set_node_cpu_free(node, cpu_free)
-        print self.print_out_node_information()
+        # print self.print_out_nodes_information()
 
-    def print_out_node_information(self):
-        # for node in self.nodes.items():
-        #     node_id = node[0]
-        #     cpu_used = node[1]['cpu']
+    def update_bandwidth_state(self):
+        for edge in self.edges():
+            self.reset_bandwidth(edge[0], edge[1])
+
+        for node in self.nodes():
+           for sfc_vnf in self.get_node_sfc_vnf_list(node):
+               sfc_id = sfc_vnf[0]
+               sfc = self.get_sfc_by_id(sfc_id)
+               vnf = sfc_vnf[1]
+               if vnf.id == 'dst':
+                   continue
+               route_info = self.sfc_route_info[sfc_id]
+               path = route_info[vnf.id]
+               self.allocate_bandwidth_resource_path(path, sfc.get_link_bandwidth_request(vnf.id, vnf.next_vnf.id))
+
+    def print_out_nodes_information(self):
         for node in self.nodes():
             node_id = node
             cpu_used = self.get_node_cpu_used(node)
             cpu_free = self.get_node_cpu_free(node)
             cpu_capacity = self.get_node_cpu_capacity(node)
-            cpu_vnf_list = self.get_node_vnf_list(node)
-            print "node id:", node_id, ":", "CPU: used:", cpu_used, "free:", cpu_free, "capacity:", cpu_capacity
+            sfc_vnf_list = self.get_node_sfc_vnf_list(node)
+            print "node id:", node_id, ":", "CPU: used:", cpu_used, "free:", cpu_free, "capacity:", cpu_capacity, "vnf", sfc_vnf_list
+
+    def print_out_edges_information(self):
+        for edge in self.edges():
+            cp = self.get_link_bandwidth_capacity(edge[0], edge[1])
+            fr = self.get_link_bandwidth_free(edge[0], edge[1])
+            ud = self.get_link_bandwidth_used(edge[0], edge[1])
+            lt = self.get_link_latency(edge[0], edge[1])
+            print "edge:", edge, ":", "BW: used:", ud, "free:", fr, "capacity:", cp, "latency:", lt
+
+
+    def update(self):
+        self.update_network_state()
+
 
 if __name__ == '__main__':
     substrate_network = Net()

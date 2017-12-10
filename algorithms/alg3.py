@@ -6,7 +6,7 @@ Consideration:
 Algorithm should not do any modification on Substrate network/
 
 It should only use network information and sfc information to 
-solve and give out a mapping and routing info, that
+solve and give out a mapping and route info, that
 
 sfc_id: 
 {substrate_node_id <- vnf_id}
@@ -36,7 +36,7 @@ class ALG3():
         self.src_substrate_node = None
         self.dst_substrate_node = None
         self.substrate_node_vnf_mapping = {} # {substrate_node_id: vnf_obj}
-        self.routing_info = {}
+        self.route_info = {}
         # self.all_pair_shortest_path_dict = {}
         '''
         node info
@@ -132,18 +132,18 @@ class ALG3():
                 break
             current_vnf = self.sfc.get_next_vnf(current_vnf)
             if current_vnf.id == 'dst':
-                print "Checking dst node in vnf"
+                # print "Checking dst node in vnf"
                 break
         self.process_dst_vnf()
 
     def process_dst_vnf(self):
-        print "processing_dst_vnf"
+        # print "processing_dst_vnf"
         dst_vnf = self.sfc.get_dst_vnf()
         dst_substrate_node = self.sfc.get_substrate_node(dst_vnf)
 
 
         self.substrate_node_vnf_mapping[dst_substrate_node] = dst_vnf
-        self.routing_info[dst_vnf.id] = []
+        self.route_info[dst_vnf.id] = []
 
 
         all_failed = True
@@ -173,26 +173,26 @@ class ALG3():
             previous_nfv.assign_substrate_node(previous_substrate_node)
             # self.substrate_network.nodes[previous_substrate_node]['vnf_list'].append(previous_nfv)
             self.substrate_node_vnf_mapping[previous_substrate_node] = previous_nfv
-            self.routing_info[previous_nfv.id] = self.node_info[current_substrate_node][current_nfv.id]['path']
-            self.routing_info[previous_nfv.id].reverse()
+            self.route_info[previous_nfv.id] = self.node_info[current_substrate_node][current_nfv.id]['path']
+            self.route_info[previous_nfv.id].reverse()
             current_nfv = previous_nfv
 
 
 
-        print ""
+        # print ""
 
     def get_vnf_mapping(self):
         return self.substrate_node_vnf_mapping
-    def get_routing_info(self):
-        return self.routing_info
+    def get_route_info(self):
+        return self.route_info
 
     def process_no_sufficient_resources(self):
         print "No sufficient resources for provisioning SFC"
 
     def iterate_substrate_node(self, substrate_node, current_vnf):
         (latency, paths) = self.substrate_network.get_single_source_minimum_latency_path(substrate_node)
-        print latency
-        print paths
+        # print latency
+        # print paths
         # Here should be carefully considered
         # del latency[substrate_node]
         # del paths[substrate_node]
@@ -207,7 +207,7 @@ class ALG3():
         bandwidth_request = 0
 
         for node, path in paths.items():
-            print node, path
+            # print node, path
 
             if not self.node_info[node][previous_vnf.id]['flag']:
                 continue
@@ -220,8 +220,8 @@ class ALG3():
                 # if we assigned a copy of substrate network to src, here should never be executed.
             bandwidth_request = self.sfc.get_link_bandwidth_request(previous_vnf.id, current_vnf.id)
             bandwidth_free = tmp_substrate_network.get_minimum_free_bandwidth(path)
-            print bandwidth_request
-            print bandwidth_free
+            # print bandwidth_request
+            # print bandwidth_free
             if bandwidth_free < bandwidth_request:
                 continue
             cpu_request = self.sfc.get_vnf_cpu_request(current_vnf)

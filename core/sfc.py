@@ -2,11 +2,12 @@ from core.vnf import VNF
 class SFC():
     def __init__(self, vnf_src, vnf_dst):
         self.number_of_vnfs = 0 # This is not include src and dst
-        self.vnfs = {}
+        self.vnfs = {} #This is not include src and dst
         self.src = vnf_src
         self.dst = vnf_dst
         self.link_bandwidth_dict = {}
         self.latency_request = 0
+        self.id = None
 
     def add_vnf(self, vnf):
         self.vnfs[vnf.id] = vnf
@@ -38,12 +39,27 @@ class SFC():
         vnf2.set_income_interface_bandwidth(link_bw)
         self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = link_bw
 
+    def change_link_bandwidth_request_to(self, vnf_id, bw):
+        vnf = self.get_vnf_by_id(vnf_id)
+        if not vnf.next_vnf:
+            return
+        next_vnf = vnf.next_vnf
+        vnf.set_outcome_interface_bandwidth(bw)
+        next_vnf.set_income_interface_bandwidth(bw)
+        self.link_bandwidth_dict[(vnf.id, next_vnf.id)] = bw
+
+    def change_node_cpu_request_to(self, vnf_id, cpu):
+        vnf = self.get_vnf_by_id(vnf_id)
+        vnf.set_cpu_request(cpu)
+
     def get_number_of_vnfs(self):
         return self.number_of_vnfs
 
     def get_vnf_cpu_request(self, vnf):
         return vnf.get_cpu_request()
     def get_link_bandwidth_request(self, vnf1_id, vnf2_id):
+        if not vnf1_id or not vnf2_id:
+            return 0
         return self.link_bandwidth_dict[(vnf1_id, vnf2_id)]
     def get_next_vnf(self, vnf):
         return vnf.get_next_vnf()
@@ -56,6 +72,11 @@ class SFC():
     def get_dst_vnf(self):
         return self.dst
     def get_vnf_by_id(self, vnf_id):
+        # This method could return the src and dst vnf
+        if vnf_id == 'src':
+            return self.src
+        if vnf_id == 'dst':
+            return self.dst
         return self.vnfs[vnf_id]
 
     def set_latency_request(self, latency_request):
@@ -68,20 +89,20 @@ class SFC():
 if __name__ == '__main__':
     src_vnf = VNF('src')
     src_vnf.set_cpu_request(0)
-    src_vnf.set_outcome_interface_banwdith(20)
+    src_vnf.set_outcome_interface_bandwidth(20)
     dst_vnf = VNF('dst')
     dst_vnf.set_cpu_request(0)
     sfc = SFC(src_vnf, dst_vnf)
     print sfc.get_number_of_vnfs()
     vnf1 = VNF(1)
     vnf1.set_cpu_request(10)
-    vnf1.set_outcome_interface_banwdith(10)
+    vnf1.set_outcome_interface_bandwidth(10)
     vnf2 = VNF(2)
     vnf2.set_cpu_request(20)
-    vnf2.set_outcome_interface_banwdith(20)
+    vnf2.set_outcome_interface_bandwidth(20)
     vnf3 = VNF(3)
     vnf3.set_cpu_request(30)
-    vnf3.set_outcome_interface_banwdith(30)
+    vnf3.set_outcome_interface_bandwidth(30)
     sfc.add_vnf(vnf1)
     sfc.add_vnf(vnf2)
     sfc.add_vnf(vnf3)

@@ -37,19 +37,20 @@ substrate_network.init_node_cpu_capacity(7, 100)
 
 src_vnf = VNF('src')
 src_vnf.set_cpu_request(0)
-src_vnf.set_outcome_interface_banwdith(20)
+src_vnf.set_outcome_interface_bandwidth(20)
 dst_vnf = VNF('dst')
 dst_vnf.set_cpu_request(0)
 sfc = SFC(src_vnf, dst_vnf)
 vnf1 = VNF(1)
 vnf1.set_cpu_request(10)
-vnf1.set_outcome_interface_banwdith(10)
+vnf1.set_outcome_interface_bandwidth(10)
 vnf2 = VNF(2)
 vnf2.set_cpu_request(20)
-vnf2.set_outcome_interface_banwdith(20)
+vnf2.set_outcome_interface_bandwidth(20)
 vnf3 = VNF(3)
 vnf3.set_cpu_request(30)
-vnf3.set_outcome_interface_banwdith(30)
+vnf3.set_outcome_interface_bandwidth(30)
+sfc.id = 'sfc_1'
 sfc.add_vnf(vnf1)
 sfc.add_vnf(vnf2)
 sfc.add_vnf(vnf3)
@@ -61,21 +62,21 @@ sfc.set_latency_request(10)
 sfc.set_src_substrate_node(1)
 sfc.set_dst_substrate_node(7)
 
-from algorithms.alg1 import ALG1
-from algorithms.alg2 import ALG2
+import copy
+sfc2 = copy.deepcopy(sfc)
+sfc2.id = "sfc_2"
+
 from algorithms.alg3 import ALG3
 alg = ALG3()
-alg.install_substrate_network(substrate_network)
-alg.install_SFC(sfc)
-alg.start_algorithm()
-sfc = alg.get_new_sfc()
-# substrate_network = alg.get_new_substrate_network()
-vnf_mapping = alg.get_vnf_mapping()
-routing_info = alg.get_routing_info()
 
 from core.monitor import Monitor
 monitor = Monitor(substrate_network)
 isStop = False
+
+from controllers.substrate_network_controller import SubstrateNetworkController
+sbn_controller = SubstrateNetworkController(substrate_network)
+
+
 
 
 while(not isStop):
@@ -83,27 +84,28 @@ while(not isStop):
     if cmd == "quit" or cmd == "exit":
         print "is stop"
         isStop = True
-    if cmd == "node info":
-        monitor.get_node_information()
-    if cmd == "ls sfc":
-        print sfc
-    if cmd == "ls sfc vnf":
-        for vnfid, vnf in sfc.vnfs.items():
-            print vnfid, vnf
-    if cmd == "add link":
-        substrate_network.init_bandwidth_capacity(1, 7, 100)
-        substrate_network.init_node_cpu_capacity(7, 100)
-        substrate_network.init_link_latency(1, 7, 20)
-    if cmd == "check node":
-        print substrate_network.node[5]['vnf_list'][0].id
-        print substrate_network.nodes[5]['vnf_list'][0].get_cpu_request()
-    if cmd == 'set request':
-        vnf = sfc.get_vnf_by_id(3)
-        vnf.set_cpu_request(50)
-    if cmd == 'update':
+    elif cmd == 'change cpu request':
+        sfc.change_node_cpu_request_to(3, 50)
+    elif cmd == 'update':
         substrate_network.update_nodes_state()
-    if cmd == "node info s":
-        substrate_network.print_out_node_information()
+        substrate_network.update_bandwidth_state()
+    elif cmd == "change bw request":
+        sfc.change_link_bandwidth_request_to(1, 100)
+        print sfc.get_link_bandwidth_request(vnf1.id, vnf2.id)
+
+    elif cmd == "bw info":
+        substrate_network.print_out_edges_information()
+    elif cmd == "mo":
+        sbn_controller.update()
+        sbn_controller.output_nodes_information()
+        sbn_controller.output_edges_information()
+    elif cmd == "deploy":
+        sbn_controller.deploy_sfc(sfc, alg)
+    elif cmd == "deploy2":
+        sbn_controller.deploy_sfc(sfc2, alg)
+    else:
+        print "no such cmd"
+    print ""
 
 
 def parseCmd(cmd):
