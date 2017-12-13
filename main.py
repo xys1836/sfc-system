@@ -4,17 +4,19 @@ from core.vnf import VNF
 
 # create a new substrate network
 substrate_network = Net()
-substrate_network.init_bandwidth_capacity(1, 6, 0)
+substrate_network.init_bandwidth_capacity(0, 1, 100)
+substrate_network.init_bandwidth_capacity(1, 6,  100)
 substrate_network.init_bandwidth_capacity(1, 2, 100)
-substrate_network.init_bandwidth_capacity(2, 3, 0)
+substrate_network.init_bandwidth_capacity(2, 3,  100)
 substrate_network.init_bandwidth_capacity(3, 4, 100)
-substrate_network.init_bandwidth_capacity(4, 5, 0)
-substrate_network.init_bandwidth_capacity(5, 6, 0)
-substrate_network.init_bandwidth_capacity(2, 6, 0)
+substrate_network.init_bandwidth_capacity(4, 5,  100)
+substrate_network.init_bandwidth_capacity(5, 6,  100)
+substrate_network.init_bandwidth_capacity(2, 6,  100)
 substrate_network.init_bandwidth_capacity(2, 5, 100)
 substrate_network.init_bandwidth_capacity(3, 5, 100)
 substrate_network.init_bandwidth_capacity(4, 7, 100)
 
+substrate_network.init_link_latency(0, 1, 2)
 substrate_network.init_link_latency(1, 6, 2)
 substrate_network.init_link_latency(1, 2, 2)
 substrate_network.init_link_latency(2, 3, 2)
@@ -26,6 +28,7 @@ substrate_network.init_link_latency(2, 5, 2)
 substrate_network.init_link_latency(3, 5, 2)
 substrate_network.init_link_latency(4, 7, 2)
 
+substrate_network.init_node_cpu_capacity(0, 100)
 substrate_network.init_node_cpu_capacity(1, 100)
 substrate_network.init_node_cpu_capacity(2, 100)
 substrate_network.init_node_cpu_capacity(3, 100)
@@ -59,7 +62,7 @@ sfc.connect_two_vnfs(vnf1, vnf2)
 sfc.connect_two_vnfs(vnf2, vnf3)
 sfc.connect_two_vnfs(vnf3, dst_vnf)
 sfc.set_latency_request(10)
-sfc.set_src_substrate_node(1)
+sfc.set_src_substrate_node(0)
 sfc.set_dst_substrate_node(7)
 
 import copy
@@ -77,15 +80,16 @@ from controllers.substrate_network_controller import SubstrateNetworkController
 sbn_controller = SubstrateNetworkController(substrate_network)
 
 
-
+sbn_controller.start()
 
 while(not isStop):
     cmd = raw_input(">")
     if cmd == "quit" or cmd == "exit":
         print "is stop"
         isStop = True
+        sbn_controller.stop()
     elif cmd == 'change cpu request':
-        sfc.change_node_cpu_request_to(3, 50)
+        sfc.change_node_cpu_request_to(3, 85)
     elif cmd == 'update':
         substrate_network.update_nodes_state()
         substrate_network.update_bandwidth_state()
@@ -96,16 +100,25 @@ while(not isStop):
     elif cmd == "bw info":
         substrate_network.print_out_edges_information()
     elif cmd == "mo":
-        sbn_controller.update()
+        # sbn_controller.update()
         sbn_controller.output_nodes_information()
         sbn_controller.output_edges_information()
     elif cmd == "deploy":
         sbn_controller.deploy_sfc(sfc, alg)
     elif cmd == "deploy2":
         sbn_controller.deploy_sfc(sfc2, alg)
+    elif cmd == "get route info":
+        print sbn_controller.get_route_info()
+    elif cmd == "start":
+        sbn_controller.start()
+    elif cmd == "stop":
+        sbn_controller.stop()
+    elif cmd == "undeploy":
+        # substrate_network.undeploy_sfc("sfc_1")
+        sbn_controller.undeploy_sfc('sfc_1')
     else:
         print "no such cmd"
-    print ""
+    print cmd
 
 
 def parseCmd(cmd):

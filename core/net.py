@@ -195,8 +195,6 @@ class Net(nx.Graph):
     def get_single_source_minimum_latency_path(self, src):
         return nx.single_source_dijkstra(self, source=src, cutoff=None, weight='latency')
 
-
-
     def deploy_sfc(self, sfc, route_info):
         if sfc.id not in self.sfc_dict:
             self.sfc_dict[sfc.id] = sfc
@@ -209,13 +207,32 @@ class Net(nx.Graph):
             vnf = sfc.get_vnf_by_id(vnf_id)
             self.nodes[path[0]]['sfc_vnf_list'].append((sfc.id, vnf))
 
+    def undeploy_sfc(self, sfc_id):
+        # after undeployed sfc, sfc need to be deleted from following dicts
+        route_info = self.sfc_route_info[sfc_id]
+        sfc = self.sfc_dict[sfc_id]
+
+        # recovery cpu resources
+        # no need to actually modify used and free cpu resource.
+        # the substrate network will be updated once the vnf removed from node
+        for vnf_id, path in route_info.items():
+            if vnf_id == 'dst':
+                self.nodes[sfc.dst.substrate_node]['sfc_vnf_list'].remove((sfc_id, sfc.dst))
+                continue
+            self.nodes[sfc.get_substrate_node(sfc.get_vnf_by_id(vnf_id))]['sfc_vnf_list'].remove((sfc_id, sfc.get_vnf_by_id(vnf_id)))
+        self.sfc_route_info.pop(sfc_id, None)
+        self.sfc_dict.pop(sfc_id, None)
+
+        # recovery bandwidth resources
+
+
+
 
 
 
     def update_network_state(self):
         self.update_nodes_state()
         self.update_bandwidth_state()
-
 
     def update_nodes_state(self):
         for node in self.nodes():
@@ -258,7 +275,6 @@ class Net(nx.Graph):
             ud = self.get_link_bandwidth_used(edge[0], edge[1])
             lt = self.get_link_latency(edge[0], edge[1])
             print "edge:", edge, ":", "BW: used:", ud, "free:", fr, "capacity:", cp, "latency:", lt
-
 
     def update(self):
         self.update_network_state()
