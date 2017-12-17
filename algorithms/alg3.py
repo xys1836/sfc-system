@@ -122,7 +122,7 @@ class ALG3():
         self.node_info[src_substrate_node][src_vnf.id]['latency'] = 0
         self.node_info[src_substrate_node][src_vnf.id]['src_path'] = [src_substrate_node]
         self.node_info[src_substrate_node][src_vnf.id]['path'] = []
-        self.node_info[src_substrate_node][src_vnf.id]['current_substrate_nodes'] = [1]
+        self.node_info[src_substrate_node][src_vnf.id]['current_substrate_nodes'] = [src_substrate_node]
 
         self.node_info[dst_substrate_node][dst_vnf.id]['flag'] = False
         self.node_info[dst_substrate_node][dst_vnf.id]['latency'] = float('inf')
