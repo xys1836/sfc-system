@@ -107,6 +107,29 @@ class SubstrateNetworkController():
         # self.update()
         self.start()
 
-    def handle_cpu_over_threshold(self):
+    def handle_cpu_over_threshold(self, alg):
         import copy
-        sn = copy.deepcopy(self.substrate_network)
+        ## undeploy the sfc, redeploy sfc by disable the over threshold cpu
+        self.stop()
+        for node in self.over_threshold_nodes_list:
+            # (sfc_id, vnf) = sn.get_node_sfc_vnf_list(node)
+            sfc_vnf_list = self.substrate_network.get_node_sfc_vnf_list(node)
+            for (sfc_id, vnf) in sfc_vnf_list:
+                ## todo: here we should consider which sfc need to be undployed. May according to priority or some history data or SLA. or cost...
+                sfc = self.substrate_network.get_sfc_by_id(sfc_id)
+                self.undeploy_sfc(sfc_id)
+                sn = copy.deepcopy(self.substrate_network)
+                sn.set_node_cpu_capacity(node, 0)
+                sn.set_node_cpu_free(node, 0)
+                alg.install_substrate_network(sn)
+                alg.install_SFC(sfc)
+                alg.start_algorithm()
+                route_info = alg.get_route_info()
+                if sfc.id in self.sfc_list:
+                    print "sfc has been deployed"
+                    return
+                self.substrate_network.deploy_sfc(sfc, route_info)
+                self.sfc_list.append(sfc.id)
+                self.substrate_network.update()
+        self.start()
+        print ""
