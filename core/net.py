@@ -25,7 +25,7 @@ node
     cpu_used: xx,
     cpu_free: xx,
     #vnf_list: [vnfObject]
-    sfc_vnf_list: [(sfc_id, vnf_id)]
+    sfc_vnf_list: [(sfc_id, vnf)]
 }
 
 """
