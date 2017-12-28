@@ -102,8 +102,7 @@ class ALG3():
             self.node_info[node] = {}
             for vnf_id, vnf in self.sfc.vnfs.items():
                 self.node_info[node][vnf_id] = {}
-                self.node_info[node][vnf_id][
-                    'flag'] = False  # This flag denote that whether vnf/id can be placed on node
+                self.node_info[node][vnf_id]['flag'] = False  # This flag denote that whether vnf/id can be placed on node
                 self.node_info[node][vnf_id]['latency'] = float('inf')
                 self.node_info[node][vnf_id]['path'] = []
                 self.node_info[node][vnf_id]['src_path'] = []
@@ -159,6 +158,8 @@ class ALG3():
             if current_vnf.id == 'dst':
                 # print "Checking dst node in vnf"
                 break
+        if all_failed_vnf:
+            return None
         self.process_dst_vnf()
 
     def process_dst_vnf(self):

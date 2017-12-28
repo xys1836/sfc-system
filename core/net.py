@@ -35,6 +35,10 @@ class Net(nx.Graph):
         nx.Graph.__init__(self)
         self.sfc_dict = {}
         self.sfc_route_info = {} # sfc_id, route_info
+        self.total_cpu_used = 0
+        self.total_bandwidth_used = 0
+        self.total_cpu_capacity = 0
+        self.total_bandwidth_capacity = 0
 
 
 
@@ -196,6 +200,9 @@ class Net(nx.Graph):
         return nx.single_source_dijkstra(self, source=src, cutoff=None, weight='latency')
 
     def deploy_sfc(self, sfc, route_info):
+        if not route_info:
+            print "route info is None"
+            return
         if sfc.id not in self.sfc_dict:
             self.sfc_dict[sfc.id] = sfc
         if sfc.id not in self.sfc_route_info:
@@ -242,6 +249,13 @@ class Net(nx.Graph):
             self.set_node_cpu_used(node, cpu_used)
             cpu_free = self.get_node_cpu_capacity(node) - cpu_used
             self.set_node_cpu_free(node, cpu_free)
+        total_cpu_capacity = 0
+        total_cpu_used = 0
+        for node in self.nodes():
+            total_cpu_used += self.get_node_cpu_used(node)
+            total_cpu_capacity += self.get_node_cpu_capacity(node)
+        self.total_cpu_used = total_cpu_used
+        self.total_cpu_capacity = total_cpu_capacity
         # print self.print_out_nodes_information()
 
     def update_bandwidth_state(self):
@@ -258,6 +272,13 @@ class Net(nx.Graph):
                route_info = self.sfc_route_info[sfc_id]
                path = route_info[vnf.id]
                self.allocate_bandwidth_resource_path(path, sfc.get_link_bandwidth_request(vnf.id, vnf.next_vnf.id))
+        total_bandwidth_used = 0
+        total_bandwidth_capacity = 0
+        for edge in self.edges():
+            total_bandwidth_used += self.get_link_bandwidth_used(edge[0], edge[1])
+            total_bandwidth_capacity += self.get_link_bandwidth_capacity(edge[0], edge[1])
+        self.total_bandwidth_capacity = total_bandwidth_capacity
+        self.total_bandwidth_used = total_bandwidth_used
 
     def print_out_nodes_information(self):
         for node in self.nodes():
@@ -267,6 +288,8 @@ class Net(nx.Graph):
             cpu_capacity = self.get_node_cpu_capacity(node)
             sfc_vnf_list = self.get_node_sfc_vnf_list(node)
             print "node id:", node_id, ":", "CPU: used:", cpu_used, "free:", cpu_free, "capacity:", cpu_capacity, "vnf", sfc_vnf_list
+        print "total cpu used: ", self.total_cpu_used, "total cpu capacity: ", self.total_cpu_capacity
+        print "CPU utilization: ", str(self.total_cpu_used*1.0/self.total_cpu_capacity*100) +'%'
 
     def print_out_edges_information(self):
         for edge in self.edges():
@@ -275,6 +298,8 @@ class Net(nx.Graph):
             ud = self.get_link_bandwidth_used(edge[0], edge[1])
             lt = self.get_link_latency(edge[0], edge[1])
             print "edge:", edge, ":", "BW: used:", ud, "free:", fr, "capacity:", cp, "latency:", lt
+        print "total bandwidth used: ", self.total_bandwidth_used, "total bandwidth capacity: ", self.total_bandwidth_capacity
+        print "Bandwidth utilization: ", str(self.total_bandwidth_used*1.0/self.total_bandwidth_capacity*100)+'%'
 
     def update(self):
         self.update_network_state()

@@ -1,4 +1,7 @@
 from core.vnf import VNF
+# import networkx as nx
+import json
+
 class SFC():
     def __init__(self, vnf_src, vnf_dst):
         self.number_of_vnfs = 0 # This is not include src and dst
@@ -84,6 +87,14 @@ class SFC():
     def get_latency_request(self):
         return self.latency_request
 
+    def set_input_throughput(self, tp):
+        # THis method input a throughput into src income interface
+        # and refresh all vnf's bw interface accordingly.
+        # while not None,
+        #     vnf1.output = vnf1.f(vnf.input)
+        #     vnf2 = vnf1.next_vnf
+        # self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = vnf1.output
+        pass
 
 
 if __name__ == '__main__':

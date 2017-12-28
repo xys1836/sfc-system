@@ -58,7 +58,9 @@ class SubstrateNetworkController():
         cpu_free = self.substrate_network.get_node_cpu_free(node_id)
         cpu_capacity = self.substrate_network.get_node_cpu_capacity(node_id)
         sfc_vnf_list = self.substrate_network.get_node_sfc_vnf_list(node_id)
-        return (cpu_used, cpu_free, cpu_capacity, sfc_vnf_list)
+        total_cpu_used = self.substrate_network.total_cpu_used
+        total_cpu_capacity = self.substrate_network.total_cpu_capacity
+        return (cpu_used, cpu_free, cpu_capacity, sfc_vnf_list, total_cpu_used, total_cpu_capacity)
 
     def update(self):
         self.substrate_network.update()
@@ -82,6 +84,8 @@ class SubstrateNetworkController():
             self.check_node_cpu_threshold(node)
 
 
+
+
     def stop(self):
         self.isStopped = True
 
@@ -93,8 +97,20 @@ class SubstrateNetworkController():
         alg.install_SFC(sfc)
         alg.start_algorithm()
         route_info = alg.get_route_info()
-        self.substrate_network.deploy_sfc(sfc, route_info)
-        self.sfc_list.append(sfc.id)
+        print route_info
+        if route_info:
+            self.substrate_network.deploy_sfc(sfc, route_info)
+            self.sfc_list.append(sfc.id)
+            self.deploy_success()
+        else:
+            self.deploy_failed()
+
+
+    def deploy_success(self):
+        print "deploy succeed"
+
+    def deploy_failed(self):
+        print "deploy failed"
 
     def get_route_info(self):
         return self.substrate_network.sfc_route_info
@@ -133,3 +149,5 @@ class SubstrateNetworkController():
                 self.substrate_network.update()
         self.start()
         print ""
+
+
