@@ -24,23 +24,23 @@ logger.error('error message')
 logger.critical('critical message')
 
 class SubstrateNetworkController():
-    pass
     def __init__(self, nw):
         pass
         self.substrate_network = nw
         self.node_info = {}
         self.alg = None
         self.sfc_list = []
-        self.isStopped = True
+        self.is_stopped = True
         self.update_interval = 1
         self.cpu_threshold = 0.8
         self.over_threshold_nodes_list = []
+        self.timer = None
 
     def start(self):
-        if not self.isStopped:
-            self.isStopped = True
+        if not self.is_stopped:
+            self.is_stopped = True
             time.sleep(2*self.update_interval)
-        self.isStopped = False
+        self.is_stopped = False
         self.update()
 
     def output_nodes_information(self):
@@ -67,8 +67,8 @@ class SubstrateNetworkController():
         self.check_cpu_threshold()
         logger.warn(self.over_threshold_nodes_list)
         logger.warn(self.sfc_list)
-        if not self.isStopped:
-            Timer(self.update_interval, self.update, ()).start()
+        if not self.is_stopped:
+            self.timer = Timer(self.update_interval, self.update, ()).start()
 
     def check_node_cpu_threshold(self, node_id):
         cpu_used = self.substrate_network.get_node_cpu_used(node_id)
@@ -87,7 +87,9 @@ class SubstrateNetworkController():
 
 
     def stop(self):
-        self.isStopped = True
+        self.is_stopped = True
+        if self.timer:
+            self.timer.cancel()
 
     def deploy_sfc(self, sfc, alg):
         if sfc.id in self.sfc_list:
@@ -116,6 +118,9 @@ class SubstrateNetworkController():
         return self.substrate_network.sfc_route_info
 
     def undeploy_sfc(self, sfc_id):
+        if sfc_id not in self.sfc_list:
+            print sfc_id, "not on the substrate network"
+            return
         self.stop()
         time.sleep(self.update_interval*2)
         self.substrate_network.undeploy_sfc(sfc_id)

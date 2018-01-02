@@ -160,7 +160,8 @@ class ALG3():
                 break
         if all_failed_vnf:
             return None
-        self.process_dst_vnf()
+        if not self.process_dst_vnf():
+            return None
 
     def process_dst_vnf(self):
         # print "processing_dst_vnf"
@@ -169,28 +170,22 @@ class ALG3():
 
 
         self.substrate_node_vnf_mapping[dst_substrate_node] = dst_vnf
-        self.route_info[dst_vnf.id] = []
+
 
 
         all_failed = True
         all_failed = self.iterate_substrate_node(dst_substrate_node, dst_vnf)
         if all_failed:
             self.process_no_sufficient_resources()
+            return
+        self.route_info[dst_vnf.id] = []
         src_vnf = self.sfc.get_src_vnf()
-        # self.substrate_network = self.node_info[dst_substrate_node][dst_vnf.id]['tmp_substrate_network']
 
-        previous_nfv = self.sfc.get_previous_vnf(dst_vnf)
-        previous_substrate_node = self.node_info[dst_substrate_node][dst_vnf.id]['previous_substrate_node']
-        # previous_substrate_node = dst_substrate_node
+        # previous_nfv = self.sfc.get_previous_vnf(dst_vnf)
+        # previous_substrate_node = self.node_info[dst_substrate_node][dst_vnf.id]['previous_substrate_node']
 
         current_nfv = dst_vnf
         current_substrate_node = dst_substrate_node
-
-        # previous_nfv = self.sfc.get_previous_vnf(current_nfv)
-        # previous_substrate_node = self.node_info[current_substrate_node][current_nfv.id]['previous_substrate_node']
-        # previous_nfv.assign_substrate_node(previous_substrate_node)
-
-
 
         while current_nfv.id != src_vnf.id:
             previous_nfv = self.sfc.get_previous_vnf(current_nfv)

@@ -1,3 +1,5 @@
+import networkx as nx
+# import matplotlib.pyplot as plt
 from core.net import Net
 from core.sfc import SFC
 from core.vnf import VNF
@@ -6,57 +8,30 @@ import random
 # create a new substrate network
 substrate_network = Net()
 
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(0, 1, bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(1, 6,  bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(1, 2, bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(2, 3,  bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(3, 4, bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(4, 5,  bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(5, 6,  bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(2, 6,  bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(2, 5, bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(3, 5, bw)
-bw = random.randint(50, 100)
-# bw = 100
-substrate_network.init_bandwidth_capacity(4, 7, bw)
+number_of_nodes = 10
+probability = 0.5
+topology = nx.erdos_renyi_graph(number_of_nodes, probability, seed=None, directed=False)
+network_create_counter = 0
+while not nx.is_connected(topology):
+    if network_create_counter >= 10000:
+        break
+    network_create_counter += 1
+    topology = nx.erdos_renyi_graph(number_of_nodes, probability, seed=None, directed=False)
 
-substrate_network.init_link_latency(0, 1, 2)
-substrate_network.init_link_latency(1, 6, 2)
-substrate_network.init_link_latency(1, 2, 2)
-substrate_network.init_link_latency(2, 3, 2)
-substrate_network.init_link_latency(3, 4, 2)
-substrate_network.init_link_latency(4, 5, 2)
-substrate_network.init_link_latency(5, 6, 2)
-substrate_network.init_link_latency(2, 6, 2)
-substrate_network.init_link_latency(2, 5, 2)
-substrate_network.init_link_latency(3, 5, 2)
-substrate_network.init_link_latency(4, 7, 2)
 
-substrate_network.init_node_cpu_capacity(0, 100)
-substrate_network.init_node_cpu_capacity(1, 100)
-substrate_network.init_node_cpu_capacity(2, 100)
-substrate_network.init_node_cpu_capacity(3, 100)
-substrate_network.init_node_cpu_capacity(4, 1)
-substrate_network.init_node_cpu_capacity(5, 100)
-substrate_network.init_node_cpu_capacity(6, 100)
-substrate_network.init_node_cpu_capacity(7, 100)
+for edge in topology.edges():
+    bw = random.randint(100, 200)
+    substrate_network.init_bandwidth_capacity(edge[0], edge[1], bw)
+    lt = random.uniform(0.5, 1.5)
+    substrate_network.init_link_latency(edge[0], edge[1], lt)
+
+for node in topology.nodes():
+    cpu_capacity = random.randint(100, 200)
+    substrate_network.init_node_cpu_capacity(node, cpu_capacity)
+
+substrate_network.update()
+substrate_network.print_out_nodes_information()
+substrate_network.print_out_edges_information()
+
+
+

@@ -5,17 +5,26 @@ class Interface():
     def set_bandwidth(self, bandwidth):
         self.bandwidth = bandwidth
 
-
+class VNFType():
+    SRC = 0
+    DST = 1
+    TYPE1 = 2
+    TYPE2 = 3
+    TYPE3 = 4
+    TYPE4 = 5
 
 class VNF():
+
     def __init__(self, id):
         self.id = id
         self.cpu_request = None
         self.interfaces = {}
-        self.previous_vnf = None
+        self.previous_vnf = None   #todo: VNF should not keep the information of previous and next vnf.
+                                   #todo: Previous and next vnf part should move to SFC and managed by SFC.
         self.next_vnf = None
         self.substrate_node = None
         self._attach_interfaces()
+        self.type = None
 
     def _attach_interfaces(self):
         income_inf = Interface('income')
@@ -54,6 +63,20 @@ class VNF():
 
     def assign_substrate_node(self, substrate_node):
         self.substrate_node = substrate_node
+
+    def traffic_process(self, incoming):
+        outcome = self.vnf_bw(incoming)
+        self.set_outcome_interface_bandwidth(outcome)
+        return outcome
+
+    def vnf_function(self):
+        incoming = self.get_income_interface_bandwidth()
+        self.traffic_process(incoming)
+        return self.get_outcome_interface_bandwidth()
+
+    def vnf_bw(self, i):
+        return i
+
 
 if __name__ == '__main__':
     vnf = VNF('src')

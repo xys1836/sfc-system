@@ -11,12 +11,14 @@ class SFC():
         self.link_bandwidth_dict = {}
         self.latency_request = 0
         self.id = None
+        self.input_throughput = 0
 
     def add_vnf(self, vnf):
         self.vnfs[vnf.id] = vnf
         self.number_of_vnfs += 1
 
     def remove_vnf(self, vnf):
+        print "Remove vnf has not be realized! Exit"
         exit(1)
 
     def set_src_substrate_node(self, substrate_node):
@@ -38,9 +40,21 @@ class SFC():
     def connect_two_vnfs(self, vnf1, vnf2):
         vnf1.set_next_vnf(vnf2)
         vnf2.set_previous_vnf(vnf1)
-        link_bw = vnf1.get_outcome_interface_bandwidth()
-        vnf2.set_income_interface_bandwidth(link_bw)
-        self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = link_bw
+        # link_bw = vnf1.get_outcome_interface_bandwidth()
+        # vnf2.set_income_interface_bandwidth(link_bw)
+        # self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = link_bw
+
+    # def set_src_input(self, bw):
+    #     vnf = self.src
+    #     vnf.set_income_interface_bandwidth(bw)
+    #
+    #     while not vnf.id == "dst":
+    #         vnf.vnf_function()
+    #         next_vnf = vnf.next_vnf
+    #         link_bw = vnf.get_outcome_interface_bandwidth()
+    #         next_vnf.set_income_interface_bandwidth(link_bw)
+    #         self.link_bandwidth_dict[(vnf.id, next_vnf.id)] = link_bw
+    #         vnf = next_vnf
 
     def change_link_bandwidth_request_to(self, vnf_id, bw):
         vnf = self.get_vnf_by_id(vnf_id)
@@ -94,6 +108,19 @@ class SFC():
         #     vnf1.output = vnf1.f(vnf.input)
         #     vnf2 = vnf1.next_vnf
         # self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = vnf1.output
+        self.input_throughput = tp
+        vnf = self.src
+        vnf.set_income_interface_bandwidth(tp)
+
+        while vnf.next_vnf:
+            vnf.vnf_function()
+            next_vnf = vnf.next_vnf
+            link_bw = vnf.get_outcome_interface_bandwidth()
+            next_vnf.set_income_interface_bandwidth(link_bw)
+            self.link_bandwidth_dict[(vnf.id, next_vnf.id)] = link_bw
+            vnf = next_vnf
+
+
         pass
 
 
