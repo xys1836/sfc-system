@@ -177,6 +177,7 @@ class ALG3():
         all_failed = self.iterate_substrate_node(dst_substrate_node, dst_vnf)
         if all_failed:
             self.process_no_sufficient_resources()
+            print "in the dst phase"
             return
         self.route_info[dst_vnf.id] = []
         src_vnf = self.sfc.get_src_vnf()

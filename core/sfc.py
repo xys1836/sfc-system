@@ -12,6 +12,8 @@ class SFC():
         self.latency_request = 0
         self.id = None
         self.input_throughput = 0
+        self.duration = 0
+
 
     def add_vnf(self, vnf):
         self.vnfs[vnf.id] = vnf
@@ -40,21 +42,6 @@ class SFC():
     def connect_two_vnfs(self, vnf1, vnf2):
         vnf1.set_next_vnf(vnf2)
         vnf2.set_previous_vnf(vnf1)
-        # link_bw = vnf1.get_outcome_interface_bandwidth()
-        # vnf2.set_income_interface_bandwidth(link_bw)
-        # self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = link_bw
-
-    # def set_src_input(self, bw):
-    #     vnf = self.src
-    #     vnf.set_income_interface_bandwidth(bw)
-    #
-    #     while not vnf.id == "dst":
-    #         vnf.vnf_function()
-    #         next_vnf = vnf.next_vnf
-    #         link_bw = vnf.get_outcome_interface_bandwidth()
-    #         next_vnf.set_income_interface_bandwidth(link_bw)
-    #         self.link_bandwidth_dict[(vnf.id, next_vnf.id)] = link_bw
-    #         vnf = next_vnf
 
     def change_link_bandwidth_request_to(self, vnf_id, bw):
         vnf = self.get_vnf_by_id(vnf_id)
@@ -102,13 +89,14 @@ class SFC():
         return self.latency_request
 
     def set_input_throughput(self, tp):
-        # THis method input a throughput into src income interface
-        # and refresh all vnf's bw interface accordingly.
-        # while not None,
-        #     vnf1.output = vnf1.f(vnf.input)
-        #     vnf2 = vnf1.next_vnf
-        # self.link_bandwidth_dict[(vnf1.id, vnf2.id)] = vnf1.output
         self.input_throughput = tp
+        self.update()
+
+
+    def update(self):
+        if not self.input_throughput:
+            return
+        tp = self.input_throughput
         vnf = self.src
         vnf.set_income_interface_bandwidth(tp)
 
@@ -121,7 +109,18 @@ class SFC():
             vnf = next_vnf
 
 
-        pass
+
+    # def start(self):
+    #     import thread
+    #     print "sfc: " + str(self.id) + " START!"
+    #     self.t = thread.start_new_thread(self.update, ())
+    #
+    # def stop(self):
+    #     if self.t:
+    #         print "sfc: " + str(self.id) + " STOP!"
+    #         self.t.exit()
+
+
 
 
 if __name__ == '__main__':

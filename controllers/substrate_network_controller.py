@@ -1,6 +1,8 @@
 import sched, time
 from threading import Timer
 import logging
+from algorithms.alg3 import ALG3
+import copy
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -28,13 +30,14 @@ class SubstrateNetworkController():
         pass
         self.substrate_network = nw
         self.node_info = {}
-        self.alg = None
         self.sfc_list = []
         self.is_stopped = True
         self.update_interval = 1
         self.cpu_threshold = 0.8
         self.over_threshold_nodes_list = []
         self.timer = None
+        self.sfc_queue = None
+        self.sfc_id_duration = {}
 
     def start(self):
         if not self.is_stopped:
@@ -42,12 +45,18 @@ class SubstrateNetworkController():
             time.sleep(2*self.update_interval)
         self.is_stopped = False
         self.update()
+        import thread
+        thread.start_new_thread(self.run, ())
 
     def output_nodes_information(self):
         self.substrate_network.print_out_nodes_information()
 
     def output_edges_information(self):
         self.substrate_network.print_out_edges_information()
+
+    def output_info(self):
+        self.output_nodes_information()
+        self.output_edges_information()
 
     def get_nodes_information(self):
         for node in self.substrate_network.nodes():
@@ -63,10 +72,12 @@ class SubstrateNetworkController():
         return (cpu_used, cpu_free, cpu_capacity, sfc_vnf_list, total_cpu_used, total_cpu_capacity)
 
     def update(self):
+
         self.substrate_network.update()
         self.check_cpu_threshold()
         logger.warn(self.over_threshold_nodes_list)
         logger.warn(self.sfc_list)
+        self.check_sfc_duration()
         if not self.is_stopped:
             self.timer = Timer(self.update_interval, self.update, ()).start()
 
@@ -83,6 +94,15 @@ class SubstrateNetworkController():
         for node in self.substrate_network.nodes():
             self.check_node_cpu_threshold(node)
 
+    def check_sfc_duration(self):
+        remove_list = []
+        for sfc_id, duration in self.sfc_id_duration.items():
+            if duration <= 1:
+                remove_list.append(sfc_id)
+                continue
+            self.sfc_id_duration[sfc_id] = duration - 1
+        for sfc_id in remove_list:
+            self.undeploy_sfc(sfc_id)
 
 
 
@@ -91,21 +111,26 @@ class SubstrateNetworkController():
         if self.timer:
             self.timer.cancel()
 
-    def deploy_sfc(self, sfc, alg):
+    def deploy_sfc(self, sfc):
         if sfc.id in self.sfc_list:
             print "sfc has been deployed"
             return
+        alg = ALG3()
         alg.install_substrate_network(self.substrate_network)
         alg.install_SFC(sfc)
         alg.start_algorithm()
         route_info = alg.get_route_info()
-        print route_info
+        # print route_info
         if route_info:
             self.substrate_network.deploy_sfc(sfc, route_info)
             self.sfc_list.append(sfc.id)
+            self.sfc_id_duration[sfc.id] = sfc.duration
             self.deploy_success()
         else:
             self.deploy_failed()
+        print "__________________________________________"
+        self.output_info()
+        print ""
 
 
     def deploy_success(self):
@@ -121,12 +146,13 @@ class SubstrateNetworkController():
         if sfc_id not in self.sfc_list:
             print sfc_id, "not on the substrate network"
             return
-        self.stop()
-        time.sleep(self.update_interval*2)
+        # self.stop()
+        # time.sleep(self.update_interval*2)
         self.substrate_network.undeploy_sfc(sfc_id)
         self.sfc_list.remove(sfc_id)
+        del self.sfc_id_duration[sfc_id]
         # self.update()
-        self.start()
+        # self.start()
 
     def handle_cpu_over_threshold(self, alg):
         import copy
@@ -155,4 +181,10 @@ class SubstrateNetworkController():
         self.start()
         print ""
 
+
+    def run(self):
+        while not self.is_stopped:
+            sfc = self.sfc_queue.peek_sfc()# this is blocking
+            # print "Substrate network gets a new sfc", sfc.id
+            self.deploy_sfc(sfc)
 

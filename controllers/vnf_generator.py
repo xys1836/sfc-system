@@ -12,6 +12,8 @@ class VNFGenerator():
         vnf_cpu_request = vnf_dict["CPU"]
         if vnf_type == VNFType.TYPE1:
             vnf = VNFType1(vnf_name)
+            vnf.set_cpu_request(vnf_cpu_request)
+            return vnf
         elif vnf_type == VNFType.TYPE2:
             print "TYPE 2 is not defined. exit"
             exit(1)
@@ -19,5 +21,4 @@ class VNFGenerator():
             print "TYPE is existed, exit"
             exit(1)
 
-        vnf.set_cpu_request(vnf_cpu_request)
-        return vnf
+

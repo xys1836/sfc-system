@@ -213,11 +213,13 @@ class Net(nx.Graph):
                 continue
             vnf = sfc.get_vnf_by_id(vnf_id)
             self.nodes[path[0]]['sfc_vnf_list'].append((sfc.id, vnf))
+        # sfc.start()
 
     def undeploy_sfc(self, sfc_id):
         # after undeployed sfc, sfc need to be deleted from following dicts
         route_info = self.sfc_route_info[sfc_id]
         sfc = self.sfc_dict[sfc_id]
+        # sfc.stop()
 
         # recovery cpu resources
         # no need to actually modify used and free cpu resource.
@@ -287,8 +289,8 @@ class Net(nx.Graph):
             cpu_free = self.get_node_cpu_free(node)
             cpu_capacity = self.get_node_cpu_capacity(node)
             sfc_vnf_list = self.get_node_sfc_vnf_list(node)
-            print "node id:", node_id, ":", "CPU: used:", cpu_used, "free:", cpu_free, "capacity:", cpu_capacity, "vnf", sfc_vnf_list
-        print "total cpu used: ", self.total_cpu_used, "total cpu capacity: ", self.total_cpu_capacity
+            # print "node id:", node_id, ":", "CPU: used:", cpu_used, "free:", cpu_free, "capacity:", cpu_capacity, "vnf", sfc_vnf_list
+        # print "total cpu used: ", self.total_cpu_used, "total cpu capacity: ", self.total_cpu_capacity
         print "CPU utilization: ", str(self.total_cpu_used*1.0/self.total_cpu_capacity*100) +'%'
 
     def print_out_edges_information(self):
@@ -297,8 +299,8 @@ class Net(nx.Graph):
             fr = self.get_link_bandwidth_free(edge[0], edge[1])
             ud = self.get_link_bandwidth_used(edge[0], edge[1])
             lt = self.get_link_latency(edge[0], edge[1])
-            print "edge:", edge, ":", "BW: used:", ud, "free:", fr, "capacity:", cp, "latency:", lt
-        print "total bandwidth used: ", self.total_bandwidth_used, "total bandwidth capacity: ", self.total_bandwidth_capacity
+            # print "edge:", edge, ":", "BW: used:", ud, "free:", fr, "capacity:", cp, "latency:", lt
+        # print "total bandwidth used: ", self.total_bandwidth_used, "total bandwidth capacity: ", self.total_bandwidth_capacity
         print "Bandwidth utilization: ", str(self.total_bandwidth_used*1.0/self.total_bandwidth_capacity*100)+'%'
 
     def update(self):

@@ -21,7 +21,8 @@ sfc_dict
     "bandwidth": 10,
     "src_node": 1,
     "dst_node": 9,
-    "latency": 10
+    "latency": 10,
+    "duration": 1000
 }
 """
 
@@ -35,6 +36,7 @@ class SFCGenerator():
         self.src_substrate_node = sfc_dict["src_node"]
         self.dst_substrate_node = sfc_dict["dst_node"]
         self.latency = sfc_dict["latency"]
+        self.duration = sfc_dict["duration"]
 
 
     def generate(self):
@@ -45,6 +47,7 @@ class SFCGenerator():
         sfc.id = self.sfc_name
         sfc.set_src_substrate_node(self.src_substrate_node)
         sfc.set_dst_substrate_node(self.dst_substrate_node)
+        sfc.duration = self.duration
 
         vnfs_list.append(src_vnf)
 
@@ -58,6 +61,7 @@ class SFCGenerator():
             sfc.connect_two_vnfs(vnfs_list[i], vnfs_list[i+1])
 
         sfc.set_input_throughput(self.bandwidth)
+        sfc.update()
         sfc.set_latency_request(self.latency)
         return sfc
 

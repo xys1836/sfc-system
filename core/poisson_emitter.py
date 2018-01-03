@@ -15,7 +15,7 @@ class PoissonEmitter():
     def start(self, func, *args):
         self.is_stop = False
         self.callback = func
-        self.args = args
+        self.args = args[0]
         self.reset_timer()
 
     def stop(self):
@@ -24,7 +24,7 @@ class PoissonEmitter():
         print "Generator is stopped"
 
 
-    def output(self):
+    def run(self):
         self.is_output = True
         self.callback(self.args)
         if not self.is_stop:
@@ -34,7 +34,7 @@ class PoissonEmitter():
         self.is_output = False
         interval = np.random.poisson(self.lam)
         print "interval is: ", interval
-        self.timer = Timer(interval, self.output, ())
+        self.timer = Timer(interval, self.run, ())
         self.timer.start()
 
 if __name__ == '__main__':
