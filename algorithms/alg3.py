@@ -263,13 +263,11 @@ class ALG3():
                 minimum_latency_path = path
                 self.node_info[substrate_node][current_vnf.id]['latency'] = current_node_latency
                 self.node_info[substrate_node][current_vnf.id]['flag'] = True
-                self.node_info[substrate_node][current_vnf.id]['tmp_substrate_network'] = copy.deepcopy(
-                    tmp_substrate_network)
+                self.node_info[substrate_node][current_vnf.id]['tmp_substrate_network'] = copy.deepcopy(tmp_substrate_network)
                 tmp_path = self.node_info[node][previous_vnf.id]['src_path']
                 tmp_path = copy.deepcopy(tmp_path)
                 self.node_info[substrate_node][current_vnf.id]['path'] = copy.deepcopy(path)
-                path = path[
-                       ::-1]  # reverse the path, since the original path is starting from this substrate network to the one hosting previous vnf.
+                path = path[::-1]  # reverse the path, since the original path is starting from this substrate network to the one hosting previous vnf.
                 for n in path[1:]:  # Do not count the node hosting previous vnf twice.
                     tmp_path.append(n)
                 self.node_info[substrate_node][current_vnf.id]['src_path'] = tmp_path[:]
