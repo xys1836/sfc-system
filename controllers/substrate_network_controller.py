@@ -2,6 +2,7 @@ import sched, time
 from threading import Timer
 import logging
 from algorithms.alg3 import ALG3
+from datetime import datetime as dt
 import copy
 
 # create logger
@@ -25,6 +26,10 @@ logger.warn('warn message')
 logger.error('error message')
 logger.critical('critical message')
 
+
+
+
+
 class SubstrateNetworkController():
     def __init__(self, nw):
         pass
@@ -38,6 +43,16 @@ class SubstrateNetworkController():
         self.timer = None
         self.sfc_queue = None
         self.sfc_id_duration = {}
+        self.bw_utilization = []
+        self.cpu_utilization = []
+        self.success_flag = []
+
+        self.counter = 0
+
+        self.file_name = './results/' + dt.now().strftime('%Y%m%d%H%M%S') + '.csv'
+        with open(self.file_name, "a") as f:
+            f.write("No., timestamp, number of sfc, CPU utilization, bandwidth utilization, latency, duration, success, arrival time, depart time" + "\n")
+
 
     def start(self):
         if not self.is_stopped:
@@ -45,6 +60,7 @@ class SubstrateNetworkController():
             time.sleep(2*self.update_interval)
         self.is_stopped = False
         self.update()
+        self.check_sfc_duration()
         import thread
         thread.start_new_thread(self.run, ())
 
@@ -77,9 +93,9 @@ class SubstrateNetworkController():
         self.check_cpu_threshold()
         logger.warn(self.over_threshold_nodes_list)
         logger.warn(self.sfc_list)
-        self.check_sfc_duration()
-        if not self.is_stopped:
-            self.timer = Timer(self.update_interval, self.update, ()).start()
+        # self.check_sfc_duration()
+        # if not self.is_stopped:
+        #     self.timer = Timer(self.update_interval, self.check_sfc_duration, ()).start()
 
     def check_node_cpu_threshold(self, node_id):
         cpu_used = self.substrate_network.get_node_cpu_used(node_id)
@@ -95,6 +111,7 @@ class SubstrateNetworkController():
             self.check_node_cpu_threshold(node)
 
     def check_sfc_duration(self):
+        time1 = time.time()
         remove_list = []
         for sfc_id, duration in self.sfc_id_duration.items():
             if duration <= 1:
@@ -103,6 +120,14 @@ class SubstrateNetworkController():
             self.sfc_id_duration[sfc_id] = duration - 1
         for sfc_id in remove_list:
             self.undeploy_sfc(sfc_id)
+        time2 = time.time()
+        logger.warn(self.sfc_id_duration)
+        if time2 - time1 > 1:
+            if not self.is_stopped:
+                self.timer = Timer(0, self.check_sfc_duration, ()).start()
+        else:
+            if not self.is_stopped:
+                self.timer = Timer((self.update_interval - (time2 - time1)), self.check_sfc_duration, ()).start()
 
 
 
@@ -118,16 +143,69 @@ class SubstrateNetworkController():
         alg = ALG3()
         alg.install_substrate_network(self.substrate_network)
         alg.install_SFC(sfc)
+        s = time.time()
         alg.start_algorithm()
+
+        s2 = time.time()
+
         route_info = alg.get_route_info()
+        node_info = alg.get_node_info()
+
         # print route_info
+
+        number_of_vnf = sfc.number_of_vnfs
+        cpu_utilization = 0
+        bw_utilization = 0
+        is_success = 0
+        latency = -1
+        current_time = s2
+        run_duration = s2 - s
+
+        arrival_time = sfc.arrival_time
+        sfc.depart_time = s2
+
         if route_info:
             self.substrate_network.deploy_sfc(sfc, route_info)
             self.sfc_list.append(sfc.id)
             self.sfc_id_duration[sfc.id] = sfc.duration
+
             self.deploy_success()
+
+            latency = node_info[sfc.get_dst_vnf().get_substrate_node()]['dst']["latency"]
+            is_success = 1
+
+
+
+
+
+
         else:
             self.deploy_failed()
+        # self.substrate_network.update()
+        self.update()
+
+        cpu_utilization = self.substrate_network.get_cpu_utilization_rate()
+        bw_utilization = self.substrate_network.get_bandwidth_utilization_rate()
+
+
+        # filename =
+        # with open('')
+        self.counter += 1
+        with open(self.file_name, "a") as f:
+            # f.writelines("timestamp, number of sfc, CPU utilization, bandwidth utilization, latency, duration, success")
+            line = str(self.counter) + ',' + \
+                   str(current_time) + ',' + \
+                   str(number_of_vnf) + ',' + \
+                   str(cpu_utilization) + ',' + \
+                   str(bw_utilization) + ',' + \
+                   str(latency) + ',' + \
+                   str(run_duration) + ',' + \
+                   str(is_success) + ',' + \
+                   str(arrival_time) + ',' +\
+                   str(s2) + "\n"
+            f.write(line)
+
+
         print "__________________________________________"
         self.output_info()
         print ""
@@ -151,7 +229,7 @@ class SubstrateNetworkController():
         self.substrate_network.undeploy_sfc(sfc_id)
         self.sfc_list.remove(sfc_id)
         del self.sfc_id_duration[sfc_id]
-        # self.update()
+        self.update()
         # self.start()
 
     def handle_cpu_over_threshold(self, alg):
@@ -186,5 +264,13 @@ class SubstrateNetworkController():
         while not self.is_stopped:
             sfc = self.sfc_queue.peek_sfc()# this is blocking
             # print "Substrate network gets a new sfc", sfc.id
+            s = time.time()
             self.deploy_sfc(sfc)
+            self.update()
+            s2 = time.time()
 
+
+
+    def output_csv(self):
+        #  1, cpu_utilization,  bw_utilization, latency, number of sfc,
+        pass

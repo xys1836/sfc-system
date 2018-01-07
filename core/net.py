@@ -306,6 +306,13 @@ class Net(nx.Graph):
     def update(self):
         self.update_network_state()
 
+    def get_cpu_utilization_rate(self):
+        self.update()
+        return self.total_cpu_used*1.0/self.total_cpu_capacity
+    def get_bandwidth_utilization_rate(self):
+        self.update()
+        return self.total_bandwidth_used*1.0/self.total_bandwidth_capacity
+
 
 if __name__ == '__main__':
     substrate_network = Net()

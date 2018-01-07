@@ -13,6 +13,8 @@ class SFC():
         self.id = None
         self.input_throughput = 0
         self.duration = 0
+        self.arrival_time = 0
+        self.depart_time = 0
 
 
     def add_vnf(self, vnf):

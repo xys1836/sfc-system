@@ -142,6 +142,9 @@ class ALG3():
     def get_new_sfc(self):
         return self.sfc
 
+    def get_node_info(self):
+        return self.node_info
+
     def algorithm(self):
         src = self.sfc.get_src_vnf()
         current_vnf = self.sfc.get_next_vnf(src)
@@ -201,7 +204,7 @@ class ALG3():
 
 
 
-        # print ""
+        print ""
 
     def get_vnf_mapping(self):
         return self.substrate_node_vnf_mapping

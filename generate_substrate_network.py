@@ -9,7 +9,7 @@ import random
 substrate_network = Net()
 
 number_of_nodes = 50
-probability = 0.5
+probability = 0.2
 topology = nx.erdos_renyi_graph(number_of_nodes, probability, seed=None, directed=False)
 network_create_counter = 0
 while not nx.is_connected(topology):
@@ -22,7 +22,7 @@ while not nx.is_connected(topology):
 for edge in topology.edges():
     bw = random.randint(50, 100)
     substrate_network.init_bandwidth_capacity(edge[0], edge[1], bw)
-    lt = random.uniform(0.5, 1.5)
+    lt = random.uniform(1, 5)
     substrate_network.init_link_latency(edge[0], edge[1], lt)
 
 for node in topology.nodes():

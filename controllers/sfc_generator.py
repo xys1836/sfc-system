@@ -4,6 +4,7 @@ from core.vnf import VNF
 from vnfs.vnf_type_src import VNFSRC
 from vnfs.vnf_type_dst import VNFDST
 from controllers.vnf_generator import VNFGenerator
+import time
 
 """
 sfc_dict
@@ -63,6 +64,7 @@ class SFCGenerator():
         sfc.set_input_throughput(self.bandwidth)
         sfc.update()
         sfc.set_latency_request(self.latency)
+        sfc.arrival_time = time.time()
         return sfc
 
 
