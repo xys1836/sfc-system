@@ -126,8 +126,12 @@ class RandomAlgorithm():
         pre_substrate_node = src_substrate_node
         latency = 0
         for node in random_sampled_substrate_network_nodes:
-            path_length = substrate_network.get_shortest_path_length(pre_substrate_node, node)
-            path = substrate_network.get_shortest_path(pre_substrate_node, node)
+            try:
+                path_length = substrate_network.get_shortest_path_length(pre_substrate_node, node)
+                path = substrate_network.get_shortest_path(pre_substrate_node, node)
+            except:
+                print "have no path between two nodes"
+                return False
             pre_substrate_node = node
 
             latency = latency + path_length
