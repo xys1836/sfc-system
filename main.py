@@ -4,6 +4,7 @@ from generate_substrate_network import substrate_network
 # from generate_sfc import sfc
 # from generate_sfc import sfc_dict
 from algorithms.alg3 import ALG3
+from algorithms.random_algorithm import RandomAlgorithm
 import numpy as np
 
 
@@ -17,22 +18,22 @@ import random
 
 number_of_substrate_node = substrate_network.number_of_nodes()
 
-sfc_dict = {
-    "name": "sfc_1",
-    "type": "xx",
-    "vnf_list": [
-        {"type": 2, "name": "vnf1", "CPU": random.randint(0, 50)},
-        {"type": 2, "name": "vnf2", "CPU": random.randint(0, 50)},
-        {"type": 2, "name": "vnf3", "CPU": random.randint(0, 50)},
-        {"type": 2, "name": "vnf4", "CPU": random.randint(0, 50)},
+# sfc_dict = {
+#     "name": "sfc_1",
+#     "type": "xx",
+#     "vnf_list": [
+#         {"type": 2, "name": "vnf1", "CPU": random.randint(0, 50)},
+#         {"type": 2, "name": "vnf2", "CPU": random.randint(0, 50)},
+#         {"type": 2, "name": "vnf3", "CPU": random.randint(0, 50)},
+#         {"type": 2, "name": "vnf4", "CPU": random.randint(0, 50)},
 
-    ],
-    "bandwidth": random.randint(0, 50),
-    "src_node": 1,
-    "dst_node": 9,
-    "latency": 10,
-    "duration": 20
-}
+#     ],
+#     "bandwidth": random.randint(0, 50),
+#     "src_node": 1,
+#     "dst_node": 9,
+#     "latency": 10,
+#     "duration": 20
+# }
 
 
 count = 0
@@ -41,6 +42,7 @@ sfc_poisson_emitter = PoissonEmitter(10)
 def generate_sfc(p):
     global count
     count = count + 1
+    sfc_dict = {}
     sfc_dict["name"] = "sfc_" + str(count)
 
     vnf_list = []
@@ -60,6 +62,7 @@ def generate_sfc(p):
     sfc_dict["src_node"] = src_node
     sfc_dict["dst_node"] = dst_node
     sfc_dict["duration"] = duration
+    sfc_dict["latency"] = random.randint(0, 50)
 
     # for test
     # vnf_list = []
@@ -78,15 +81,13 @@ def generate_sfc(p):
 
 
 
-    # print "***********"
-    print count
-    print sfc_dict
-    # print "###########"
+    print "number of total sfc: ", count
+    # print sfc_dict
 
 
     sfc = SFCGenerator(sfc_dict).generate()
     sfc_queue.put_sfc(sfc)
-    print "queue_size: " + str(sfc_queue.qsize())
+    
     if count >= 1000:
         print "stop"
         sfc_poisson_emitter.stop()
@@ -94,9 +95,12 @@ def generate_sfc(p):
 
 sfc_poisson_emitter.start(generate_sfc, (None))
 
-alg = ALG3()
+
+# alg = ALG3()
+alg = RandomAlgorithm()
 sbn_controller = SubstrateNetworkController(substrate_network)
 sbn_controller.sfc_queue = sfc_queue
+sbn_controller.alg = alg
 sbn_controller.start()
 
 while 1:
