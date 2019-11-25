@@ -5,6 +5,7 @@ from generate_substrate_network import substrate_network
 # from generate_sfc import sfc_dict
 from algorithms.alg3 import ALG3
 from algorithms.random_algorithm import RandomAlgorithm
+from algorithms.greedy_algorithm import GreedyAlgorithm
 import numpy as np
 
 
@@ -15,6 +16,12 @@ from controllers.sfc_controller import SFCController
 
 
 import random
+
+
+
+AVERAGE_TIME_SFC_ARRIVAL = 10
+SELECTED_ALG = GreedyAlgorithm()
+
 
 number_of_substrate_node = substrate_network.number_of_nodes()
 
@@ -38,7 +45,7 @@ number_of_substrate_node = substrate_network.number_of_nodes()
 
 count = 0
 sfc_queue = SFCQueue()
-sfc_poisson_emitter = PoissonEmitter(10)
+sfc_poisson_emitter = PoissonEmitter(AVERAGE_TIME_SFC_ARRIVAL)
 def generate_sfc(p):
     global count
     count = count + 1
@@ -97,7 +104,7 @@ sfc_poisson_emitter.start(generate_sfc, (None))
 
 
 # alg = ALG3()
-alg = RandomAlgorithm()
+alg = SELECTED_ALG
 sbn_controller = SubstrateNetworkController(substrate_network)
 sbn_controller.sfc_queue = sfc_queue
 sbn_controller.alg = alg
