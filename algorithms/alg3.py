@@ -1,6 +1,6 @@
 import copy
-
-
+import time
+import ujson
 """
 Consideration:
 Algorithm should not do any modification on Substrate network/
@@ -62,6 +62,7 @@ class ALG3():
         self.dst_substrate_node = None
         self.substrate_node_vnf_mapping = {} # {substrate_node_id: vnf_obj}
         self.route_info = {}
+        self.single_source_minimum_latency_path = None
         # self.all_pair_shortest_path_dict = {}
         '''
         node info
@@ -80,9 +81,30 @@ class ALG3():
 
         pass
 
+    def clear_all(self):
+        print "alg: clear all"
+        self.substrate_network = None
+        self.sfc = None
+        self.current_vnf = None
+        self.next_vnf = None
+        self.current_substrate_node = None
+        self.node_info = {}
+        self.src_substrate_node = None
+        self.dst_substrate_node = None
+        self.substrate_node_vnf_mapping = {} # {substrate_node_id: vnf_obj}
+        self.route_info = {}
+        self.single_source_minimum_latency_path = None
+
+        self.copy_time = 0
+
     def install_substrate_network(self, substrate_network):
         # self.substrate_network = copy.deepcopy(substrate_network)
         self.substrate_network = substrate_network
+        self.single_source_minimum_latency_path = self.substrate_network.pre_get_single_source_minimum_latency_path()
+        self.substrate_network = copy.deepcopy(substrate_network)
+        for node in self.substrate_network.nodes():
+            self.substrate_network.nodes[node]['sfc_vnf_list']  = None
+        
 
         # for node in substrate_network.nodes():
         #     self.node_info[node] = {}
@@ -90,6 +112,7 @@ class ALG3():
 
     def install_SFC(self, sfc):
         # self.sfc = copy.deepcopy(sfc)
+        print "alg: install sfc:", sfc.id
         self.sfc = sfc
         src_vnf = self.sfc.get_src_vnf()
         src_substrate_node = self.sfc.get_substrate_node(src_vnf)
@@ -133,7 +156,9 @@ class ALG3():
         return self.sfc
 
     def start_algorithm(self):
+        print "alg: start algorithm sfc:", self.sfc.id
         self.algorithm()
+        print "alg: completed algorithm sfc:", self.sfc.id
         return
 
     def get_new_substrate_network(self):
@@ -143,7 +168,11 @@ class ALG3():
         return self.sfc
 
     def get_node_info(self):
+        print "alg: get node info: sfc:", self.sfc.id
         return self.node_info
+
+    def get_latency(self):
+        return self.node_info[self.sfc.get_dst_vnf().get_substrate_node()]['dst']["latency"]
 
     def algorithm(self):
         src = self.sfc.get_src_vnf()
@@ -209,13 +238,16 @@ class ALG3():
     def get_vnf_mapping(self):
         return self.substrate_node_vnf_mapping
     def get_route_info(self):
+        print "alg: get route info: sfc:", self.sfc.id
         return self.route_info
 
     def process_no_sufficient_resources(self):
         print "No sufficient resources for provisioning SFC"
 
     def iterate_substrate_node(self, substrate_node, current_vnf):
-        (latency, paths) = self.substrate_network.get_single_source_minimum_latency_path(substrate_node)
+        # (latency, paths) = self.substrate_network.get_single_source_minimum_latency_path(substrate_node)
+        # (latency, paths) = self.substrate_network.get_single_source_minimum_latency_path_method(substrate_node)
+        (latency, paths) = self.single_source_minimum_latency_path[substrate_node]
         # print latency
         # print paths
         # Here should be carefully considered
@@ -263,7 +295,12 @@ class ALG3():
                 minimum_latency_path = path
                 self.node_info[substrate_node][current_vnf.id]['latency'] = current_node_latency
                 self.node_info[substrate_node][current_vnf.id]['flag'] = True
+                s1 = time.time()
                 self.node_info[substrate_node][current_vnf.id]['tmp_substrate_network'] = copy.deepcopy(tmp_substrate_network)
+                s = time.time()
+                # print "copy substrate network: ", s - s1
+                self.copy_time = self.copy_time + s - s1
+                print self.copy_time
                 tmp_path = self.node_info[node][previous_vnf.id]['src_path']
                 tmp_path = copy.deepcopy(tmp_path)
                 self.node_info[substrate_node][current_vnf.id]['path'] = copy.deepcopy(path)
@@ -274,7 +311,7 @@ class ALG3():
                 self.node_info[substrate_node][current_vnf.id]['previous_substrate_node'] = node
 
                 self.node_info[substrate_node][current_vnf.id]['current_substrate_nodes'] = \
-                self.node_info[node][previous_vnf.id]['current_substrate_nodes'][:]
+                    self.node_info[node][previous_vnf.id]['current_substrate_nodes'][:]
                 self.node_info[substrate_node][current_vnf.id]['current_substrate_nodes'].append(substrate_node)
 
             all_failed = False
