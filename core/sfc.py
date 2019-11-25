@@ -16,6 +16,9 @@ class SFC():
         self.arrival_time = 0
         self.depart_time = 0
 
+    def __str__(self):
+        attrs = vars(self)
+        return ', '.join("%s: %s" % item for item in attrs.items())
 
     def add_vnf(self, vnf):
         self.vnfs[vnf.id] = vnf
