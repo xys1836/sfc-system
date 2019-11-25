@@ -49,6 +49,8 @@ class SubstrateNetworkController():
 
         self.counter = 0
 
+        self.alg = None
+
         self.file_name = './results/' + dt.now().strftime('%Y%m%d%H%M%S') + '.csv'
         with open(self.file_name, "a") as f:
             f.write("No., timestamp, number of sfc, CPU utilization, bandwidth utilization, latency, duration, success, arrival time, depart time" + "\n")
@@ -140,18 +142,27 @@ class SubstrateNetworkController():
         if sfc.id in self.sfc_list:
             print "sfc has been deployed"
             return
-        alg = ALG3()
+        # alg = ALG3()
+        alg = self.alg
+        alg.clear_all()
         alg.install_substrate_network(self.substrate_network)
         alg.install_SFC(sfc)
         s = time.time()
         alg.start_algorithm()
-
         s2 = time.time()
 
-        route_info = alg.get_route_info()
-        node_info = alg.get_node_info()
+        # |-> For test dy algorithm
+        # alg2 = ALG3()
+        # alg2.clear_all()
+        # alg2.install_substrate_network(self.substrate_network)
+        # alg2.install_SFC(sfc)
+        # alg2.start_algorithm()
+        # route_info_2 = alg2.get_route_info()
+        # latency_2 = alg2.get_latency()
+        # For test dy algorithm END ->|
 
-        # print route_info
+
+        route_info = alg.get_route_info()
 
         number_of_vnf = sfc.number_of_vnfs
         cpu_utilization = 0
@@ -169,18 +180,14 @@ class SubstrateNetworkController():
             self.sfc_list.append(sfc.id)
             self.sfc_id_duration[sfc.id] = sfc.duration
 
-            self.deploy_success()
+            self.deploy_success(sfc)
 
-            latency = node_info[sfc.get_dst_vnf().get_substrate_node()]['dst']["latency"]
+            # latency = node_info[sfc.get_dst_vnf().get_substrate_node()]['dst']["latency"]
+            latency_1 = alg.get_latency()
             is_success = 1
 
-
-
-
-
-
         else:
-            self.deploy_failed()
+            self.deploy_failed(sfc)
         # self.substrate_network.update()
         self.update()
 
@@ -211,11 +218,11 @@ class SubstrateNetworkController():
         print ""
 
 
-    def deploy_success(self):
-        print "deploy succeed"
+    def deploy_success(self, sfc):
+        print "deploy succeed, sfc: ", sfc.id
 
-    def deploy_failed(self):
-        print "deploy failed"
+    def deploy_failed(self, sfc):
+        print "deploy failed, sfc: ", sfc.id
 
     def get_route_info(self):
         return self.substrate_network.sfc_route_info
@@ -233,6 +240,8 @@ class SubstrateNetworkController():
         # self.start()
 
     def handle_cpu_over_threshold(self, alg):
+        """Seems use to for test. 
+        """
         import copy
         ## undeploy the sfc, redeploy sfc by disable the over threshold cpu
         self.stop()
@@ -263,11 +272,14 @@ class SubstrateNetworkController():
     def run(self):
         while not self.is_stopped:
             sfc = self.sfc_queue.peek_sfc()# this is blocking
-            # print "Substrate network gets a new sfc", sfc.id
+            print "Substrate network gets a new sfc", sfc.id
+            print str(sfc)
+            print "queue_size: " + str(self.sfc_queue.qsize())
             s = time.time()
             self.deploy_sfc(sfc)
             self.update()
             s2 = time.time()
+            print "algorithm take time: ", s2 - s
 
 
 
