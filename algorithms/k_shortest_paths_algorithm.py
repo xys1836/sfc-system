@@ -50,8 +50,9 @@ logger.critical('critical message')
 
 
 
-class KShortestAlgorithm():
+class KShortestPathsAlgorithm():
     def __init__(self):
+        self.name = "k shortest paths algorithm"
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
