@@ -40,11 +40,11 @@ ch.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
 # 'application' code
-logger.debug('debug message')
-logger.info('info message')
-logger.warn('warn message')
-logger.error('error message')
-logger.critical('critical message')
+# logger.debug('debug message')
+# logger.info('info message')
+# logger.warn('warn message')
+# logger.error('error message')
+# logger.critical('critical message')
 
 
 """
@@ -68,7 +68,7 @@ class RandomAlgorithm():
 
 
     def clear_all(self):
-        logger.debug('clear all')
+        logger.info('clear all')
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
@@ -76,25 +76,24 @@ class RandomAlgorithm():
         self.latency = None
 
     def install_substrate_network(self, substrate_network):
+        logger.info('install substrate network')
         self.substrate_network = copy.deepcopy(substrate_network)
         return self.substrate_network
 
     def install_SFC(self, sfc):
+        logger.info('install sfc')
+        logger.debug(sfc)
         self.sfc = sfc
-        # src_vnf = self.sfc.get_src_vnf()
-        # src_substrate_node = self.sfc.get_substrate_node(src_vnf)
-        # self.src_substrate_node = src_substrate_node
-        # dst_vnf = self.sfc.get_dst_vnf()
-        # dst_substrate_node = self.sfc.get_substrate_node(dst_vnf)
-        # self.dst_substrate_node = dst_substrate_node
-
         return self.sfc
 
     def start_algorithm(self):
         substrate_network = self.substrate_network
         sfc = self.sfc
+        logger.info('Algorithm start')
         if self.algorithm(substrate_network, sfc):
+            logger.info('Algorithm end, success')
             return True
+        logger.info('Algorithm end, failed')
         return False
 
     # def get_node_info(self):
@@ -108,7 +107,6 @@ class RandomAlgorithm():
 
 
     def algorithm(self, substrate_network, sfc):
-        logger.info('Algorithm Start')
 
         nodes = substrate_network.nodes()
         ## Get src and dst vnf
@@ -143,7 +141,9 @@ class RandomAlgorithm():
 
         route_info = {}
         current_vnf = src_vnf
-        count = 0
+
+        bandwidth_info = {}
+
         pre_substrate_node = src_substrate_node
         latency = 0
         for node in random_sampled_substrate_network_nodes:
@@ -151,7 +151,7 @@ class RandomAlgorithm():
                 path_length = substrate_network.get_shortest_path_length(pre_substrate_node, node)
                 path = substrate_network.get_shortest_path(pre_substrate_node, node)
             except:
-                print "have no path between two nodes"
+                logger.warning('have no path between two nodes: %s - %s', pre_substrate_node, node)
                 return False
             pre_substrate_node = node
 
@@ -164,15 +164,29 @@ class RandomAlgorithm():
             cpu_available = substrate_network.get_node_cpu_free(node)
 
             if cpu_request > cpu_available:
-                print "cpu resources is not sufficient"
+                logger.warning('cpu resources is not sufficient')
                 return False
 
             bandwidth_request = sfc.get_link_bandwidth_request(vnf_id, current_vnf.id)
-            bandwidth_available = substrate_network.get_minimum_free_bandwidth(path)
 
-            if bandwidth_request > bandwidth_available :
-                print "bandwidth resources is not sufficient"
-                return False
+            length = len(path)
+            for i in range(0, length - 1):
+                edge_key = frozenset((path[i], path[i+1]))
+                residual_bandwidth = None
+                if  edge_key in bandwidth_info:
+                    residual_bandwidth = bandwidth_info[edge_key] - bandwidth_request
+                else:
+                    residual_bandwidth = substrate_network.get_link_bandwidth_free(path[i],
+                                                                                   path[i + 1]) - bandwidth_request
+                if  residual_bandwidth < 0:
+                    logger.warning('Bandwidth resources is not sufficient')
+                    return False
+                bandwidth_info[edge_key] = residual_bandwidth
+
+
+        # if bandwidth_request > bandwidth_available :
+        #         print "bandwidth resources is not sufficient"
+        #         return False
 
 
         route_info['dst'] = []  # make a placeholder for dst.
