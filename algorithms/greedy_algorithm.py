@@ -60,7 +60,7 @@ class GreedyAlgorithm():
 
 
     def clear_all(self):
-        print "random algorithm: clear all"
+        print "greedy algorithm: clear all"
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
@@ -89,7 +89,7 @@ class GreedyAlgorithm():
 
     def algorithm(self, substrate_network, sfc):
     
-        print "random algorithm: "
+        print "greedy algorithm: "
 
         nodes = substrate_network.nodes()
         ## Get src and dst vnf
@@ -99,11 +99,6 @@ class GreedyAlgorithm():
         ## Get substrate network nodes that src and dst are assigned in advanced
         src_substrate_node = sfc.get_substrate_node(src_vnf)
         dst_substrate_node = sfc.get_substrate_node(dst_vnf)
-
-        
-    
-
-        # substrate_network.edges(node)
 
         route_info = {}
         number_of_vnfs = sfc.get_number_of_vnfs()
