@@ -39,6 +39,7 @@ class Net(nx.Graph):
         self.total_bandwidth_used = 0
         self.total_cpu_capacity = 0
         self.total_bandwidth_capacity = 0
+        self.single_source_minimum_latency_path = None
     
     def get_sfc_by_id(self, sfc_id):
         return self.sfc_dict[sfc_id]
@@ -205,11 +206,12 @@ class Net(nx.Graph):
         return nx.single_source_dijkstra(self, source=src, cutoff=None, weight='latency')
 
     def pre_get_single_source_minimum_latency_path(self):
-        print "pre_get_single_source_minimum_latency_path"
+        # print "pre_get_single_source_minimum_latency_path"
         single_source_minimum_latency_path = {}
         for node in self.nodes():
             single_source_minimum_latency_path[node] = \
             nx.single_source_dijkstra(self, source=node, cutoff=None, weight='latency')
+        self.single_source_minimum_latency_path = single_source_minimum_latency_path
         return single_source_minimum_latency_path
 
     def deploy_sfc(self, sfc, route_info):
@@ -225,6 +227,7 @@ class Net(nx.Graph):
                 self.nodes[sfc.dst.substrate_node]['sfc_vnf_list'].append((sfc.id, sfc.dst))
                 continue
             vnf = sfc.get_vnf_by_id(vnf_id)
+            print path
             self.nodes[path[0]]['sfc_vnf_list'].append((sfc.id, vnf))
         # sfc.start()
 
