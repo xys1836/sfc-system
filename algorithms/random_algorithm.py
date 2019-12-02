@@ -142,7 +142,7 @@ class RandomAlgorithm():
         route_info = {}
         current_vnf = src_vnf
 
-        bandwidth_info = {}
+        bandwidth_usage_info = {}
 
         pre_substrate_node = src_substrate_node
         latency = 0
@@ -173,20 +173,15 @@ class RandomAlgorithm():
             for i in range(0, length - 1):
                 edge_key = frozenset((path[i], path[i+1]))
                 residual_bandwidth = None
-                if  edge_key in bandwidth_info:
-                    residual_bandwidth = bandwidth_info[edge_key] - bandwidth_request
+                if  edge_key in bandwidth_usage_info:
+                    residual_bandwidth = bandwidth_usage_info[edge_key] - bandwidth_request
                 else:
                     residual_bandwidth = substrate_network.get_link_bandwidth_free(path[i],
                                                                                    path[i + 1]) - bandwidth_request
                 if  residual_bandwidth < 0:
                     logger.warning('Bandwidth resources is not sufficient')
                     return False
-                bandwidth_info[edge_key] = residual_bandwidth
-
-
-        # if bandwidth_request > bandwidth_available :
-        #         print "bandwidth resources is not sufficient"
-        #         return False
+                bandwidth_usage_info[edge_key] = residual_bandwidth
 
 
         route_info['dst'] = []  # make a placeholder for dst.
