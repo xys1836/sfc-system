@@ -1,5 +1,7 @@
 import time
 from topology.simple_substrate_network import simple_six_node_topology
+from generate_substrate_network import substrate_random_network
+
 from sfc_examples import sfc1
 from controllers.sfc_generator import SFCGenerator
 
@@ -8,38 +10,56 @@ from algorithms.random_algorithm import RandomAlgorithm
 from algorithms.greedy_algorithm import GreedyAlgorithm
 from algorithms.dynamic_programming_algorithm import DynamicProgrammingAlgorithm
 
+ALG3 = ALG3()
 ALG = DynamicProgrammingAlgorithm()
-ALG = RandomAlgorithm()
-# ALG = GreedyAlgorithm()
+RandomAlgorithm = RandomAlgorithm()
+GreedyAlgorithm = GreedyAlgorithm()
 
 substrate_network = simple_six_node_topology
+substrate_network = substrate_random_network
 
 sfc_dict = sfc1.sfc
 sfc = SFCGenerator(sfc_dict).generate()
 
-alg = ALG
-alg.clear_all()
-alg.install_substrate_network(substrate_network)
-alg.install_SFC(sfc)
-s = time.time()
-if alg.start_algorithm():
+
+def deploy_sfc(deployment_algorithm, substrate_network, sfc):
+    print "---------- " + deployment_algorithm.name + " ----------------------------"
+    start_time = time.time()
+    deployment_algorithm.clear_all()
+    deployment_algorithm.install_substrate_network(substrate_network)
+    end_time = time.time()
+    deployment_algorithm.install_SFC(sfc)
+
+    print end_time - start_time
+    start_time = time.time()
+    deployment_algorithm.start_algorithm()
+    end_time = time.time()
+
+    route_info = deployment_algorithm.get_route_info()
+    latency = deployment_algorithm.get_latency()
+    return (route_info, latency, (end_time - start_time))
+
+
+
+(route_info, latency, execution_time) = deploy_sfc(GreedyAlgorithm, substrate_network, sfc)
+if route_info:
     print "success"
+    print "route info: ", route_info
+    print "latency: ", latency
+    print "execution time: ", execution_time
+    substrate_network.deploy_sfc(sfc, route_info)
+    substrate_network.update_network_state()
 else:
     print "failed"
-s2 = time.time()
 
-route_info = alg.get_route_info()
-latency = alg.get_latency()
-print route_info
-print latency
 
-        # |-> For test dy algorithm
-        # alg2 = ALG3()
-        # alg2.clear_all()
-        # alg2.install_substrate_network(self.substrate_network)
-        # alg2.install_SFC(sfc)
-        # alg2.start_algorithm()
-        # route_info_2 = alg2.get_route_info()
-        # latency_2 = alg2.get_latency()
-        # For test dy algorithm END ->|
-
+(route_info, latency, execution_time) = deploy_sfc(ALG, substrate_network, sfc)
+if route_info:
+    print "success"
+    print "route info: ", route_info
+    print "latency: ", latency
+    print "execution time: ", execution_time
+    substrate_network.deploy_sfc(sfc, route_info)
+    substrate_network.update_network_state()
+else:
+    print "failed"
