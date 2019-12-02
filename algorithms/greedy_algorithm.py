@@ -60,7 +60,6 @@ class GreedyAlgorithm():
 
 
     def clear_all(self):
-        print "greedy algorithm: clear all"
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
@@ -78,8 +77,12 @@ class GreedyAlgorithm():
     def start_algorithm(self):
         substrate_network = self.substrate_network
         sfc = self.sfc
-        self.algorithm(substrate_network, sfc)
-        return
+        logger.info("Start algorithm")
+        if self.algorithm(substrate_network, sfc):
+            logger.info("End algorithm, success")
+            return True
+        logger.info("End algorithm, failed")
+        return False
 
     def get_latency(self):
         return self.latency
@@ -88,10 +91,6 @@ class GreedyAlgorithm():
         return self.route_info
 
     def algorithm(self, substrate_network, sfc):
-    
-        print "greedy algorithm: "
-
-        nodes = substrate_network.nodes()
         ## Get src and dst vnf
         src_vnf = sfc.get_src_vnf()
         dst_vnf = sfc.get_dst_vnf()
@@ -101,13 +100,14 @@ class GreedyAlgorithm():
         dst_substrate_node = sfc.get_substrate_node(dst_vnf)
 
         route_info = {}
+        bandwidth_usage_info = {}
+        node = None
+        latency = 0
+        used_node = [src_substrate_node, dst_substrate_node]
+
         number_of_vnfs = sfc.get_number_of_vnfs()
         current_vnf = src_vnf
         current_substrate_node = src_substrate_node
-
-        used_node = [src_substrate_node, dst_substrate_node]
-        node = None
-        latency = 0
         for i in range(0, number_of_vnfs):
             
             edges = substrate_network.edges(current_substrate_node)
@@ -141,6 +141,22 @@ class GreedyAlgorithm():
                 route_info[current_vnf.id] = [current_substrate_node, node]
                 used_node.append(node)
                 latency = latency + mim_latency
+
+                edge_key = frozenset((current_substrate_node, node))
+
+                # Record the bandwidth usage in bandwidth_usage_info
+                residual_bandwidth = None
+                if edge_key in bandwidth_usage_info:
+                    residual_bandwidth = bandwidth_usage_info[edge_key] - bandwidth_request
+                else:
+                    residual_bandwidth = substrate_network.get_link_bandwidth_free(current_substrate_node,
+                                                                                   node) - bandwidth_request
+                if residual_bandwidth < 0:
+                    logger.warning('Bandwidth resources is not sufficient')
+                    return False
+                bandwidth_usage_info[edge_key] = residual_bandwidth
+
+
             else:
                 return False
             
@@ -151,13 +167,31 @@ class GreedyAlgorithm():
 
         try:
             path = substrate_network.get_shortest_path(node, dst_substrate_node)
-            path_length = substrate_network.get_shortest_path_length(node, dst_substrate_node)
+            path_latency = substrate_network.get_shortest_path_length(node, dst_substrate_node)
         except:
             print "have no path between last vnf and dst"
             return False
         
         bandwidth_request = sfc.get_link_bandwidth_request(current_vnf.id, 'dst')
         bandwidth_available = substrate_network.get_minimum_free_bandwidth(path)
+
+        length = len(path)
+        for i in range(0, length - 1):
+            edge_key = frozenset((path[i], path[i + 1]))
+            residual_bandwidth = None
+            if edge_key in bandwidth_usage_info:
+                residual_bandwidth = bandwidth_usage_info[edge_key] - bandwidth_request
+            else:
+                residual_bandwidth = substrate_network.get_link_bandwidth_free(path[i],
+                                                                               path[i + 1]) - bandwidth_request
+            if residual_bandwidth < 0:
+                logger.warning('Bandwidth resources is not sufficient')
+                return False
+            bandwidth_usage_info[edge_key] = residual_bandwidth
+
+
+
+
         if bandwidth_request > bandwidth_available:
             # if edge has not sufficient bandwidth, check next edge. 
             return False
@@ -165,64 +199,10 @@ class GreedyAlgorithm():
 
         route_info[current_vnf.id] = path
         route_info['dst'] = []
-        latency = latency + path_length
+        latency = latency + path_latency
 
 
         self.route_info = route_info
         self.latency = latency
 
-
-    
-
-            
-
-
-
-
-
-
-
-        ########
-
-        # nodesList = list(nodes)
-        # nodesList.remove(src_substrate_node)
-        # print nodesList
-
-        
-        # random_sampled_substrate_network_nodes = random.sample(nodesList, k=number_of_vnfs)
-        # random_sampled_substrate_network_nodes.append(dst_substrate_node)
-
-        # route_info = {}
-        # current_vnf = src_vnf
-        # count = 0
-        # pre_substrate_node = src_substrate_node
-        # latency = 0
-        # for node in random_sampled_substrate_network_nodes:
-        #     path_length = substrate_network.get_shortest_path_length(pre_substrate_node, node)
-        #     path = substrate_network.get_shortest_path(pre_substrate_node, node)
-        #     pre_substrate_node = node
-
-        #     latency = latency + path_length
-        #     vnf_id = current_vnf.id
-        #     route_info[vnf_id] = path
-        #     current_vnf = current_vnf.get_next_vnf()
-
-        #     cpu_request = sfc.get_vnf_cpu_request(current_vnf)
-        #     cpu_available = substrate_network.get_node_cpu_free(node)
-
-        #     if cpu_request > cpu_available:
-        #         print "cpu resources is not sufficient"
-        #         return False
-
-        #     bandwidth_request = sfc.get_link_bandwidth_request(vnf_id, current_vnf.id)
-        #     bandwidth_available = substrate_network.get_minimum_free_bandwidth(path)
-
-        #     if bandwidth_request > bandwidth_available :
-        #         print "bandwidth resources is not sufficient"
-        #         return False
-
-
-        # route_info['dst'] = []  # make a placeholder for dst.
-        # self.route_info = route_info
-        # self.latency = latency
-        # return True
+        return True
