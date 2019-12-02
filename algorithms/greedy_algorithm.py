@@ -52,6 +52,7 @@ logger.critical('critical message')
 
 class GreedyAlgorithm():
     def __init__(self):
+        self.name = "Greedy Algorithm"
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
@@ -116,31 +117,37 @@ class GreedyAlgorithm():
             cpu_request = sfc.get_vnf_cpu_request(next_vnf)
             bandwidth_request = sfc.get_link_bandwidth_request(current_vnf.id, next_vnf.id)
 
-            mim_latency = None
+            min_latency = None
             
             for e in edges:
+                logger.debug(e)
                 if e[1] in used_node:
                     # do not use the node used before, to avoid loop
+                    logger.debug("-----------------------------> node %s have been used", e[1])
                     continue
                 cpu_available = substrate_network.get_node_cpu_free(e[1])
                 if cpu_request > cpu_available:
-                    # if node has not sufficient cpu, check next edge. 
+                    # if node has not sufficient cpu, check next edge.
+                    logger.debug("node %s has not sufficient cpu", e[1])
                     continue
 
                 bandwidth_available = substrate_network.get_link_bandwidth_free(e[0], e[1])
                 if bandwidth_request > bandwidth_available:
-                    # if edge has not sufficient bandwidth, check next edge. 
+                    # if edge has not sufficient bandwidth, check next edge.
+                    logger.debug("edge has not sufficient bandwidth, check next edge")
                     continue
                 
                 edge_latency = substrate_network.get_link_latency(e[0], e[1])
-                if not mim_latency or edge_latency < mim_latency:
-                    mim_latency = edge_latency
+                if not min_latency or edge_latency < min_latency:
+                    logger.debug("-----------------------------> node %s have minimum latency", e[1])
+                    min_latency = edge_latency
                     node = e[1]
 
-            if node:
+            if node != None:
+                # be careful that node can be 0
                 route_info[current_vnf.id] = [current_substrate_node, node]
                 used_node.append(node)
-                latency = latency + mim_latency
+                latency = latency + min_latency
 
                 edge_key = frozenset((current_substrate_node, node))
 
@@ -158,6 +165,7 @@ class GreedyAlgorithm():
 
 
             else:
+                logger.debug("node is not existing")
                 return False
             
             current_substrate_node = node
@@ -169,7 +177,7 @@ class GreedyAlgorithm():
             path = substrate_network.get_shortest_path(node, dst_substrate_node)
             path_latency = substrate_network.get_shortest_path_length(node, dst_substrate_node)
         except:
-            print "have no path between last vnf and dst"
+            logger.warning('have no path between last vnf and dst: %s - %s', node, dst_substrate_node)
             return False
         
         bandwidth_request = sfc.get_link_bandwidth_request(current_vnf.id, 'dst')
