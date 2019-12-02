@@ -47,6 +47,14 @@ logger.error('error message')
 logger.critical('critical message')
 
 
+"""
+Not yet implemented
+error_code:
+0: src/dst is not in the substrate network
+1: CPU is not sufficient
+2: Bandwidth is not sufficient
+3: No path between nodes
+"""
 
 
 
@@ -60,7 +68,7 @@ class RandomAlgorithm():
 
 
     def clear_all(self):
-        print "random algorithm: clear all"
+        logger.debug('clear all')
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
@@ -85,8 +93,9 @@ class RandomAlgorithm():
     def start_algorithm(self):
         substrate_network = self.substrate_network
         sfc = self.sfc
-        self.algorithm(substrate_network, sfc)
-        return
+        if self.algorithm(substrate_network, sfc):
+            return True
+        return False
 
     # def get_node_info(self):
     #     return self.node_info
@@ -97,27 +106,39 @@ class RandomAlgorithm():
     def get_route_info(self):
         return self.route_info
 
-    def algorithm(self, substrate_network, sfc):
 
-        print "random algorithm: "
+    def algorithm(self, substrate_network, sfc):
+        logger.info('Algorithm Start')
 
         nodes = substrate_network.nodes()
         ## Get src and dst vnf
         src_vnf = sfc.get_src_vnf()
         dst_vnf = sfc.get_dst_vnf()
 
-        ## Get substrate network nodes that src and dst are assigned in advanced
+        ## Get substrate network nodes that src and dst are assigned in advanced 
+        # (ingress and egress substrate network nodes)
         src_substrate_node = sfc.get_substrate_node(src_vnf)
         dst_substrate_node = sfc.get_substrate_node(dst_vnf)
 
         number_of_vnfs = sfc.get_number_of_vnfs()
 
-        nodesList = list(nodes)
-        nodesList.remove(src_substrate_node)
-        print nodesList
-
         
+        # Randomly generated K number of substrate nodes from all substrate nodes except ingress and egress.
+        # K is equal to the number of vnfs in sfc.
+        nodesList = list(nodes)
+        try:
+            nodesList.remove(src_substrate_node)  # Remove ingress nodes from substrate node list
+            nodesList.remove(dst_substrate_node)  # Remove egress nodes from substrate node list 
+        except ValueError:
+            # src or dst is not in the substrate network nodes
+            logger.warning('src or dst is not in the substrate network nodes')
+            return False
+        if number_of_vnfs > len(nodesList):
+            # have not sufficient nodes for host vnfs
+            return False
         random_sampled_substrate_network_nodes = random.sample(nodesList, k=number_of_vnfs)
+
+        # Append the egress substrate network nodes for host dst vnf
         random_sampled_substrate_network_nodes.append(dst_substrate_node)
 
         route_info = {}
