@@ -5,7 +5,7 @@ from core.sfc import SFC
 from core.vnf import VNF
 import random
 
-topology = None
+simple_six_node_topology = None
 
 
 
@@ -19,18 +19,18 @@ def generate_substrate_network():
     substrate_network.init_bandwidth_capacity(4, 5, 100)
     substrate_network.init_bandwidth_capacity(5, 6, 100)
     substrate_network.init_bandwidth_capacity(2, 6, 100)
-    substrate_network.init_bandwidth_capacity(2, 5, 100)
+    # substrate_network.init_bandwidth_capacity(2, 5, 100)
     substrate_network.init_bandwidth_capacity(3, 5, 100)
 
     substrate_network.init_link_latency(1, 6, 2)
-    substrate_network.init_link_latency(1, 2, 2)
-    substrate_network.init_link_latency(2, 3, 2)
-    substrate_network.init_link_latency(3, 4, 2)
+    substrate_network.init_link_latency(1, 2, 1)
+    substrate_network.init_link_latency(2, 3, 4)
+    substrate_network.init_link_latency(3, 4, 3)
     substrate_network.init_link_latency(4, 5, 2)
     substrate_network.init_link_latency(5, 6, 2)
-    substrate_network.init_link_latency(2, 6, 2)
-    substrate_network.init_link_latency(2, 5, 2)
-    substrate_network.init_link_latency(3, 5, 2)
+    substrate_network.init_link_latency(2, 6, 5)
+    # substrate_network.init_link_latency(2, 5, 2)
+    substrate_network.init_link_latency(3, 5, 3)
 
     substrate_network.init_node_cpu_capacity(1, 100)
     substrate_network.init_node_cpu_capacity(2, 100)
@@ -41,7 +41,7 @@ def generate_substrate_network():
 
     return substrate_network
 
-topology = generate_substrate_network()
+simple_six_node_topology = generate_substrate_network()
 
 
 
