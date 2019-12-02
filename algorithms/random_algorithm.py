@@ -60,6 +60,7 @@ error_code:
 
 class RandomAlgorithm():
     def __init__(self):
+        self.name = "Random Algorithm"
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
