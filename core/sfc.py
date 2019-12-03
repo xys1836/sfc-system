@@ -153,6 +153,7 @@ if __name__ == '__main__':
     sfc.connect_two_vnfs(vnf2, vnf3)
     sfc.connect_two_vnfs(vnf3, dst_vnf)
     print sfc.get_number_of_vnfs()
+    print sfc.get_previous_vnf(src_vnf)
 
 
 
