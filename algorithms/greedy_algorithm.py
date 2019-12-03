@@ -120,10 +120,8 @@ class GreedyAlgorithm():
             min_latency = None
             
             for e in edges:
-                logger.debug(e)
                 if e[1] in used_node:
                     # do not use the node used before, to avoid loop
-                    logger.debug("-----------------------------> node %s have been used", e[1])
                     continue
                 cpu_available = substrate_network.get_node_cpu_free(e[1])
                 if cpu_request > cpu_available:
@@ -139,7 +137,6 @@ class GreedyAlgorithm():
                 
                 edge_latency = substrate_network.get_link_latency(e[0], e[1])
                 if not min_latency or edge_latency < min_latency:
-                    logger.debug("-----------------------------> node %s have minimum latency", e[1])
                     min_latency = edge_latency
                     node = e[1]
 
