@@ -1,6 +1,6 @@
 import copy
 import time
-import ujson
+
 """
 Consideration:
 Algorithm should not do any modification on Substrate network/
@@ -300,7 +300,7 @@ class ALG3():
                 s = time.time()
                 # print "copy substrate network: ", s - s1
                 self.copy_time = self.copy_time + s - s1
-                print self.copy_time
+                # print self.copy_time
                 tmp_path = self.node_info[node][previous_vnf.id]['src_path']
                 tmp_path = copy.deepcopy(tmp_path)
                 self.node_info[substrate_node][current_vnf.id]['path'] = copy.deepcopy(path)
