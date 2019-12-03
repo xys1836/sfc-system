@@ -9,11 +9,13 @@ from algorithms.alg3 import ALG3
 from algorithms.random_algorithm import RandomAlgorithm
 from algorithms.greedy_algorithm import GreedyAlgorithm
 from algorithms.dynamic_programming_algorithm import DynamicProgrammingAlgorithm
+from algorithms.k_shortest_paths_algorithm import KShortestPathsAlgorithm
 
 ALG3 = ALG3()
-ALG = DynamicProgrammingAlgorithm()
+DPA = DynamicProgrammingAlgorithm()
 RandomAlgorithm = RandomAlgorithm()
 GreedyAlgorithm = GreedyAlgorithm()
+KShortestPathsAlgorithm = KShortestPathsAlgorithm()
 
 substrate_network = simple_six_node_topology
 substrate_network = substrate_random_network
@@ -39,6 +41,16 @@ def deploy_sfc(deployment_algorithm, substrate_network, sfc):
     latency = deployment_algorithm.get_latency()
     return (route_info, latency, (end_time - start_time))
 
+(route_info, latency, execution_time) = deploy_sfc(DPA, substrate_network, sfc)
+if route_info:
+    print "success"
+    print "route info: ", route_info
+    print "latency: ", latency
+    print "execution time: ", execution_time
+    substrate_network.deploy_sfc(sfc, route_info)
+    substrate_network.update_network_state()
+else:
+    print "failed"
 
 
 (route_info, latency, execution_time) = deploy_sfc(GreedyAlgorithm, substrate_network, sfc)
@@ -52,8 +64,13 @@ if route_info:
 else:
     print "failed"
 
+for i in range(0,10000):
+    from generate_substrate_network import generate_random_network
 
-(route_info, latency, execution_time) = deploy_sfc(ALG, substrate_network, sfc)
+    substrate_network = generate_random_network()
+    (route_info, latency, execution_time) = deploy_sfc(KShortestPathsAlgorithm, substrate_network, sfc)
+    print i
+(route_info, latency, execution_time) = deploy_sfc(DPA, substrate_network, sfc)
 if route_info:
     print "success"
     print "route info: ", route_info
