@@ -102,7 +102,7 @@ class GreedyAlgorithm():
 
         route_info = {}
         bandwidth_usage_info = {}
-        node = None
+
         latency = 0
         used_node = [src_substrate_node, dst_substrate_node]
 
@@ -118,7 +118,8 @@ class GreedyAlgorithm():
             bandwidth_request = sfc.get_link_bandwidth_request(current_vnf.id, next_vnf.id)
 
             min_latency = None
-            
+            node = None
+
             for e in edges:
                 if e[1] in used_node:
                     # do not use the node used before, to avoid loop
@@ -136,7 +137,7 @@ class GreedyAlgorithm():
                     continue
                 
                 edge_latency = substrate_network.get_link_latency(e[0], e[1])
-                if not min_latency or edge_latency < min_latency:
+                if min_latency == None or edge_latency < min_latency:
                     min_latency = edge_latency
                     node = e[1]
 
