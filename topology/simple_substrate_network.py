@@ -44,3 +44,7 @@ def generate_substrate_network():
     return substrate_network
 
 simple_six_node_topology = generate_substrate_network()
+if __name__ == '__main__':
+    simple_six_node_topology = generate_substrate_network()
+    bc = nx.algorithms.centrality.betweenness_centrality_subset(simple_six_node_topology, [1], [4], weight='latency')
+    print bc
