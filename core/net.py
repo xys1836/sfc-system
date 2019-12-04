@@ -362,7 +362,9 @@ if __name__ == '__main__':
     print substrate_network.nodes().data()
     print substrate_network.edges().data()
     print substrate_network.get_link_latency(1, 2)
+    print substrate_network.get_link_latency(2, 1)
     print substrate_network.get_link_bandwidth_free(1, 2)
+    print substrate_network.get_link_bandwidth_free(2, 1)
     print [n for n in substrate_network.get_neighbours(6)]
     # print substrate_network.all_shortest_paths()
     print "shortestpath"
