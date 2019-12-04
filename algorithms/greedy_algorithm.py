@@ -1,27 +1,18 @@
-import copy
-import random
-
 """
 Consideration:
-Algorithm should not do any modification on Substrate network/
+Algorithm should not do any modification on substrate network
 
-It should only use network information and sfc information to 
+It should only use network information and sfc information to
 solve and give out a mapping and route info, that
 
-sfc_id: 
-{substrate_node_id <- vnf_id}
-<- is a mapping
-
-sfc_id:
+route info :=
 {
     src:  [1, 2, 3],
     vnf1: [3, 4, 5],
     vnf2: [5, 6, 7],
     vnf3: [7, 8 ,9],
     dst:  []
-
 }
-
 
 """
 import logging
@@ -39,15 +30,6 @@ formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(messag
 ch.setFormatter(formatter)
 # add ch to logger
 logger.addHandler(ch)
-# 'application' code
-logger.debug('debug message')
-logger.info('info message')
-logger.warn('warn message')
-logger.error('error message')
-logger.critical('critical message')
-
-
-
 
 
 class GreedyAlgorithm():
@@ -68,7 +50,7 @@ class GreedyAlgorithm():
         self.latency = None
 
     def install_substrate_network(self, substrate_network):
-        self.substrate_network = copy.deepcopy(substrate_network)
+        self.substrate_network = substrate_network
         return self.substrate_network
 
     def install_SFC(self, sfc):
@@ -92,11 +74,11 @@ class GreedyAlgorithm():
         return self.route_info
 
     def algorithm(self, substrate_network, sfc):
-        ## Get src and dst vnf
+        # Get src and dst vnf
         src_vnf = sfc.get_src_vnf()
         dst_vnf = sfc.get_dst_vnf()
 
-        ## Get substrate network nodes that src and dst are assigned in advanced
+        # Get substrate network nodes that src and dst are assigned in advanced
         src_substrate_node = sfc.get_substrate_node(src_vnf)
         dst_substrate_node = sfc.get_substrate_node(dst_vnf)
 
@@ -168,10 +150,9 @@ class GreedyAlgorithm():
             
             current_substrate_node = node
             current_vnf = next_vnf
-            # route_info[current_vnf.id] = []
-        
 
         try:
+            # get shortest path length. here shortest path length is weighted by latency.
             path = substrate_network.get_shortest_path(node, dst_substrate_node)
             path_latency = substrate_network.get_shortest_path_length(node, dst_substrate_node)
         except:
@@ -195,18 +176,13 @@ class GreedyAlgorithm():
                 return False
             bandwidth_usage_info[edge_key] = residual_bandwidth
 
-
-
-
         if bandwidth_request > bandwidth_available:
             # if edge has not sufficient bandwidth, check next edge. 
             return False
 
-
         route_info[current_vnf.id] = path
         route_info['dst'] = []
         latency = latency + path_latency
-
 
         self.route_info = route_info
         self.latency = latency
