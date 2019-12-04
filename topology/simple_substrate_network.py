@@ -38,6 +38,8 @@ def generate_substrate_network():
     substrate_network.init_node_cpu_capacity(4, 100)
     substrate_network.init_node_cpu_capacity(5, 100)
     substrate_network.init_node_cpu_capacity(6, 100)
+    substrate_network.pre_get_single_source_minimum_latency_path()
+    substrate_network.update()
 
     return substrate_network
 
