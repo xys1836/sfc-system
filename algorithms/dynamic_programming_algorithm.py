@@ -257,7 +257,10 @@ class DynamicProgrammingAlgorithm():
             is_bandwidth_sufficient = True
             bandwidth_usage_info = copy.copy(
                 self.node_info[substrate_node][previous_vnf_id]['bandwidth_usage_info'])
+
             path = node_path[node]
+            if path[0] != substrate_node:
+                path.reverse()
             length = len(path)
             for i in range(0, length - 1):
                 edge_key = frozenset((path[i], path[i + 1]))
