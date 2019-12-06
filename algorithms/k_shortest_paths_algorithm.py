@@ -23,7 +23,8 @@ logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
 # ch = logging.StreamHandler()
-ch = logging.FileHandler('./logs/KShortestAlgorithm.log')
+from config import ROOT_PATH
+ch = logging.FileHandler(ROOT_PATH + './logs/KShortestAlgorithm.log')
 ch.setLevel(logging.DEBUG)
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -34,7 +35,20 @@ logger.addHandler(ch)
 
 
 class KShortestPathsAlgorithm():
-    def __init__(self):
+    '''k-shortest paths algorithm.
+    Find k shortest paths between src and dst.
+    Use the longest path as the candidate path. (initial path, who has the most number of node along the path)
+    If the number of nodes along the path cannot host all the VNFs in the SFC,
+    find the edge with least available bandwidth resource, say edge (m,n).
+    Remove the edge (m,n) from the path.
+    Check and compare the CPU capacity of m's neighbor nodes and n's neighbor.
+    Select the node who has the most available CPU capacity to host VNF, say node c.
+    Find the shortest paths from c to m, and c to n.
+
+    Refer to the following paper.
+
+    L. Qu, C. Assi, K. Shaban, and M. J. Khabbaz, "A reliability-aware network service chain provisioning with delay guarantees in NFV-enabled enterprise datacenter networks," IEEE Trans. Netw. Service Manag.,vol. 14, no. 3, pp. 554-568, Sep. 2017.
+    '''
     def __init__(self, k):
         self.name = "k shortest paths algorithm"
         self.substrate_network = None

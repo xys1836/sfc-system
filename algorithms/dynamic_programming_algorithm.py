@@ -17,6 +17,7 @@ route info :=
 """
 import copy
 import logging
+from config import ROOT_PATH
 
 # create logger
 logger = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
 # ch = logging.StreamHandler()
-ch = logging.FileHandler('./logs/DynamicProgrammingAlgorithm.log')
+ch = logging.FileHandler(ROOT_PATH + './logs/DynamicProgrammingAlgorithm.log')
 ch.setLevel(logging.DEBUG)
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')

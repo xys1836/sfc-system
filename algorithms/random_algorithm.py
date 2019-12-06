@@ -23,7 +23,8 @@ logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
 # ch = logging.StreamHandler()
-ch = logging.FileHandler('./logs/RandomAlgorithm.log')
+from config import ROOT_PATH
+ch = logging.FileHandler(ROOT_PATH + './logs/RandomAlgorithm.log')
 ch.setLevel(logging.DEBUG)
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -34,6 +35,22 @@ logger.addHandler(ch)
 
 
 class RandomAlgorithm():
+    '''Random algorithm.
+
+    Randomly select k number of substrate nodes from substrate network, where k is equal to the VNFs of an SFC.
+    Note that these k nodes cannot be the substrate nodes who host src and dst of SFC.
+    Start from src, find shortest path one by one and connect the shortest paths among selected nodes.
+
+    By comparing with this random algorithm,
+    The purpose of random allocation is to know
+    whether our approach has a considerable impact on the load balance,
+    or alternatively simply building servers in the preferred node by the network operator
+    is enough to load balance the network.
+
+    Refer to:
+    Random fit placement
+    F. Carpio, S. Dhahri, and A. Jukan, "VNF placement with replication for Load balancing in NFV networks," IEEE Int. Conf. Commun., pp. 1-6, 2017.
+    '''
     def __init__(self):
         self.name = "Random Algorithm"
         self.substrate_network = None

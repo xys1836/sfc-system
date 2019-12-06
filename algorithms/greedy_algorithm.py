@@ -22,7 +22,8 @@ logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
 # ch = logging.StreamHandler()
-ch = logging.FileHandler('./logs/GreedyAlgorithm.log')
+from config import ROOT_PATH
+ch = logging.FileHandler(ROOT_PATH + './logs/GreedyAlgorithm.log')
 ch.setLevel(logging.DEBUG)
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -33,6 +34,15 @@ logger.addHandler(ch)
 
 
 class GreedyAlgorithm():
+    '''Greedy Algorithm.
+    This algorithm starts from the substrate network node which hosts src of an SFC, checks its neighbor nodes,
+    finds the neighbor node with a shortest latency edge, and use the node to host the vnf.
+    The algorithm greedily finds all nodes for hosting vnf.
+    Finally, the algorithm finds a shortest path from the substrate node who hosts the last vnf in the SFC
+    to the substrate node who hosts dst of the SFC.
+
+    Deploy VNF one by one, with a shortest path from the node to the previous substrate node.
+    '''
     def __init__(self):
         self.name = "Greedy Algorithm"
         self.substrate_network = None
