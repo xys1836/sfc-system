@@ -35,12 +35,14 @@ logger.addHandler(ch)
 
 class KShortestPathsAlgorithm():
     def __init__(self):
+    def __init__(self, k):
         self.name = "k shortest paths algorithm"
         self.substrate_network = None
         self.sfc = None
         self.node_info = None
         self.route_info = None
         self.latency = None
+        self.k = k
 
 
     def clear_all(self):
@@ -76,7 +78,7 @@ class KShortestPathsAlgorithm():
         return self.route_info
 
     def algorithm(self, substrate_network, sfc):
-        k = 100
+        k = self.k
 
         ## Get src and dst vnf
         src_vnf = sfc.get_src_vnf()
