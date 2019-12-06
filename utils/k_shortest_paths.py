@@ -10,4 +10,7 @@ def k_shortest_paths(G, source, target, k, weight=None):
            weight: weight for calculation of shortest path
     :return: a list of k shortest paths
     """
-    return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
+    try:
+        return list(islice(nx.shortest_simple_paths(G, source, target, weight=weight), k))
+    except:
+        return []
