@@ -31,7 +31,8 @@ logger.setLevel(logging.DEBUG)
 
 # create console handler and set level to debug
 # ch = logging.StreamHandler()
-ch = logging.FileHandler('./logs/alg.log')
+from config import ROOT_PATH
+ch = logging.FileHandler(ROOT_PATH + './logs/alg.log')
 ch.setLevel(logging.DEBUG)
 # create formatter
 formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
@@ -52,6 +53,7 @@ logger.critical('critical message')
 
 class ALG3():
     def __init__(self):
+        self.name = 'ALG3'
         self.substrate_network = None
         self.sfc = None
         self.current_vnf = None
@@ -191,9 +193,10 @@ class ALG3():
                 # print "Checking dst node in vnf"
                 break
         if all_failed_vnf:
-            return None
+            return False
         if not self.process_dst_vnf():
-            return None
+            return False
+        return True
 
     def process_dst_vnf(self):
         # print "processing_dst_vnf"
@@ -209,7 +212,7 @@ class ALG3():
         all_failed = self.iterate_substrate_node(dst_substrate_node, dst_vnf)
         if all_failed:
             self.process_no_sufficient_resources()
-            print "in the dst phase"
+            # print "in the dst phase"
             return
         self.route_info[dst_vnf.id] = []
         src_vnf = self.sfc.get_src_vnf()
@@ -233,16 +236,17 @@ class ALG3():
 
 
 
-        print ""
+        # print ""
 
     def get_vnf_mapping(self):
         return self.substrate_node_vnf_mapping
     def get_route_info(self):
-        print "alg: get route info: sfc:", self.sfc.id
+        # print "alg: get route info: sfc:", self.sfc.id
         return self.route_info
 
     def process_no_sufficient_resources(self):
-        print "No sufficient resources for provisioning SFC"
+        # print "No sufficient resources for provisioning SFC"
+        pass
 
     def iterate_substrate_node(self, substrate_node, current_vnf):
         # (latency, paths) = self.substrate_network.get_single_source_minimum_latency_path(substrate_node)
