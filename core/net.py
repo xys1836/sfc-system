@@ -227,7 +227,7 @@ class Net(nx.Graph):
                 self.nodes[sfc.dst.substrate_node]['sfc_vnf_list'].append((sfc.id, sfc.dst))
                 continue
             vnf = sfc.get_vnf_by_id(vnf_id)
-            print path
+            # print path
             self.nodes[path[0]]['sfc_vnf_list'].append((sfc.id, vnf))
         # sfc.start()
 
