@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 from core.net import Net
 
 
-bandwidth_capacity = 100
+bandwidth_capacity = 1000
 cpu_capacity = 100
 def generate_substrate_network():
     substrate_network = Net()
@@ -278,7 +278,6 @@ def generate_substrate_network():
     substrate_network.init_node_cpu_capacity(6, 100)
 
     for i in range(0, 48):
-        print i
         substrate_network.init_node_cpu_capacity(i, cpu_capacity)
 
 
