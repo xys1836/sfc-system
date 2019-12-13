@@ -28,7 +28,7 @@ KPathsAlgorithm_10 = KShortestPathsAlgorithm(10)
 BCAlgorithm = BetweennessCentralityAlgorithm()
 RAAlgorithm = RandomAlgorithm()
 
-substrate_network = generate_random_network(100, 0.05)
+substrate_network = generate_random_network(200, 0.05)
 substrate_network_dp = copy.deepcopy(substrate_network)
 substrate_network_gd = copy.deepcopy(substrate_network)
 substrate_network_k1 = copy.deepcopy(substrate_network)
@@ -156,7 +156,7 @@ def experiment(number_of_experiment, number_of_vnfs):
         else:
             count += 1
             print count
-            output_results_csv(res, './results/random/100/p005-' + str(number_of_vnfs) +'.csv')
+            output_results_csv(res, './results/random/200/p005-' + str(number_of_vnfs) +'.csv')
 
 for number_of_vnfs  in [2,3,4,5]:
     experiment(NUMBER_OF_EXPERIMENTS, number_of_vnfs=number_of_vnfs)
