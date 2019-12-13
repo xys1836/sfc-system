@@ -164,7 +164,7 @@ class BetweennessCentralityAlgorithm():
                                                                                    path[i + 1]) - bandwidth_request
                 if residual_bandwidth < 0:
                     logger.warning('Bandwidth resources is not sufficient')
-                    print 'bandwidth resource is not sufficient'
+                    # print 'bandwidth resource is not sufficient'
                     return False
                 bandwidth_usage_info[edge_key] = residual_bandwidth
 

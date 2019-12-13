@@ -268,15 +268,6 @@ def generate_substrate_network():
 
     substrate_network.init_link_latency(44, 45, 2.24722130934995)
 
-
-
-    substrate_network.init_node_cpu_capacity(1, 100)
-    substrate_network.init_node_cpu_capacity(2, 100)
-    substrate_network.init_node_cpu_capacity(3, 100)
-    substrate_network.init_node_cpu_capacity(4, 100)
-    substrate_network.init_node_cpu_capacity(5, 100)
-    substrate_network.init_node_cpu_capacity(6, 100)
-
     for i in range(0, 48):
         substrate_network.init_node_cpu_capacity(i, cpu_capacity)
 
