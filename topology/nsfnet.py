@@ -5,8 +5,8 @@ import random
 simple_six_node_topology = None
 
 
-bandwidth_capacity = 100000
-cpu_capacity = 10000
+bandwidth_capacity = 1000
+cpu_capacity = 100
 
 def generate_substrate_network():
     substrate_network = Net()
