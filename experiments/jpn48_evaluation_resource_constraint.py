@@ -159,7 +159,7 @@ def experiment(number_of_experiment, number_of_vnfs):
 
 # NUMBER_OF_EXPERIMENTS = 500
 
-for ne in [200, 300, 400, 500]:
+for ne in [100, 200, 300, 400, 500]:  #number of sfcs
     for nv in [2, 3, 4, 5]:
         for count in range(0, 10):
             substrate_network_dp = copy.deepcopy(substrate_network)
