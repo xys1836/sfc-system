@@ -19,13 +19,15 @@ def generate_random_network(number_of_node, probability):
         topology = nx.erdos_renyi_graph(number_of_nodes, probability, seed=None, directed=False)
 
     for edge in topology.edges():
-        bw = random.randint(50, 100)
+        # bw = random.randint(50, 100)
+        bw = 1000
         substrate_random_network.init_bandwidth_capacity(edge[0], edge[1], bw)
         lt = random.uniform(1, 5)
         substrate_random_network.init_link_latency(edge[0], edge[1], lt)
 
     for node in topology.nodes():
-        cpu_capacity = random.randint(50, 100)
+        # cpu_capacity = random.randint(50, 100)
+        cpu_capacity = 100
         substrate_random_network.init_node_cpu_capacity(node, cpu_capacity)
     substrate_random_network.pre_get_single_source_minimum_latency_path()
     substrate_random_network.update()
