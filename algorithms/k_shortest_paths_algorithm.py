@@ -213,7 +213,8 @@ class KShortestPathsAlgorithm():
             if sfc.get_next_vnf(current_vnf).id == 'dst':
                 continue
             if node not in used_node:
-                cpu_request = sfc.get_vnf_cpu_request(current_vnf)
+                # current_vnf =
+                cpu_request = sfc.get_vnf_cpu_request(sfc.get_next_vnf(current_vnf))
                 cpu_available = substrate_network.get_node_cpu_free(node)
                 if cpu_request > cpu_available:
                     # if node has not sufficient cpu, check next edge.
