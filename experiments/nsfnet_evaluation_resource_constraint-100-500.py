@@ -78,7 +78,7 @@ def construct_sfc(src, dst, number_of_vnfs):
     sfc_dict['dst_node'] = dst
     for i in range(0, number_of_vnfs):
         name = 'vnf' + str(i + 1)
-        vnf = {"type": 2, "name": name, "CPU": random.randint(1, 10)}
+        vnf = {"type": 2, "name": name, "CPU": random.randint(5, 10)}
         sfc_dict['vnf_list'].append(vnf)
     # print sfc_dict
     sfc = SFCGenerator(sfc_dict).generate()
@@ -125,9 +125,9 @@ def experiment(number_of_experiment, number_of_vnfs):
 
 # NUMBER_OF_EXPERIMENTS = 500
 
-for ne in [100, 200, 300, 400, 500]: #number of sfcs
+for ne in [100, 500]: #number of sfcs
     for nv in [2, 3, 4, 5]:
-        for count in range(0, 1):
+        for count in range(0, 10):
             substrate_network_dp = copy.deepcopy(substrate_network)
             substrate_network_gd = copy.deepcopy(substrate_network)
             substrate_network_k1 = copy.deepcopy(substrate_network)
